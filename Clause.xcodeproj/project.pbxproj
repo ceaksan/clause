@@ -18,6 +18,9 @@
 		B01C80915E0B39E25CF34420 /* NoteStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0CD1959E5F356F45E8E42BD2 /* NoteStoreTests.swift */; };
 		B0DD178F37A3252D8E306470 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8C822B03054F032A778F5330 /* main.swift */; };
 		D3B95D74ABCC678207F67934 /* ModelsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 09A88343C537438E37A6A2EE /* ModelsTests.swift */; };
+		AA11BB22CC33DD44EE55FF66 /* Session.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA11BB22CC33DD44EE55FF67 /* Session.swift */; };
+		BB22CC33DD44EE55FF66AA11 /* SocketConstants.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB22CC33DD44EE55FF66AA12 /* SocketConstants.swift */; };
+		CC33DD44EE55FF66AA11BB22 /* MessageTypes.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC33DD44EE55FF66AA11BB23 /* MessageTypes.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -81,6 +84,9 @@
 		0CD1959E5F356F45E8E42BD2 /* NoteStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoteStoreTests.swift; sourceTree = "<group>"; };
 		1E679C9171C5DCA7D632CF7D /* ClauseApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClauseApp.swift; sourceTree = "<group>"; };
 		6AC6AECC6F2F2F123FB848DD /* Note.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Note.swift; sourceTree = "<group>"; };
+		AA11BB22CC33DD44EE55FF67 /* Session.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Session.swift; sourceTree = "<group>"; };
+		BB22CC33DD44EE55FF66AA12 /* SocketConstants.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SocketConstants.swift; sourceTree = "<group>"; };
+		CC33DD44EE55FF66AA11BB23 /* MessageTypes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MessageTypes.swift; sourceTree = "<group>"; };
 		760C52F32197DFBFC4CE570D /* ClauseShared.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = ClauseShared.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		7C562DBBEEC1CF92397BDFCF /* ClauseAppTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ClauseAppTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		8C822B03054F032A778F5330 /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
@@ -170,8 +176,18 @@
 			isa = PBXGroup;
 			children = (
 				6AC6AECC6F2F2F123FB848DD /* Note.swift */,
+				AA11BB22CC33DD44EE55FF67 /* Session.swift */,
 			);
 			path = Models;
+			sourceTree = "<group>";
+		};
+		DD44EE55FF66AA11BB22CC33 /* IPC */ = {
+			isa = PBXGroup;
+			children = (
+				BB22CC33DD44EE55FF66AA12 /* SocketConstants.swift */,
+				CC33DD44EE55FF66AA11BB23 /* MessageTypes.swift */,
+			);
+			path = IPC;
 			sourceTree = "<group>";
 		};
 		CA8959716C955310771277B0 /* ClauseMCP */ = {
@@ -186,6 +202,7 @@
 			isa = PBXGroup;
 			children = (
 				95F3DBC6B5E0E7CD6DBCFC30 /* Models */,
+				DD44EE55FF66AA11BB22CC33 /* IPC */,
 			);
 			path = ClauseShared;
 			sourceTree = "<group>";
@@ -347,6 +364,9 @@
 			buildActionMask = 2147483647;
 			files = (
 				99D0D9900BB78846D34962C3 /* Note.swift in Sources */,
+				AA11BB22CC33DD44EE55FF66 /* Session.swift in Sources */,
+				BB22CC33DD44EE55FF66AA11 /* SocketConstants.swift in Sources */,
+				CC33DD44EE55FF66AA11BB22 /* MessageTypes.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -532,8 +552,8 @@
 		80143628676C2E20559C94E1 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				BUNDLE_LOADER = "$(TEST_HOST)";
 				COMBINE_HIDPI_IMAGES = YES;
+				GENERATE_INFOPLIST_FILE = YES;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
@@ -547,8 +567,8 @@
 		91D9C7DB76240753F6756A5A /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				BUNDLE_LOADER = "$(TEST_HOST)";
 				COMBINE_HIDPI_IMAGES = YES;
+				GENERATE_INFOPLIST_FILE = YES;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
