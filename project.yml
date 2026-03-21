@@ -1,0 +1,101 @@
+name: Clause
+options:
+  deploymentTarget:
+    macOS: "14.0"
+  bundleIdPrefix: com.ceaksan
+  xcodeVersion: "16.0"
+  defaultConfig: Debug
+
+packages:
+  MCP:
+    url: https://github.com/modelcontextprotocol/swift-sdk
+    from: "0.11.0"
+
+settings:
+  base:
+    SWIFT_VERSION: "6.0"
+
+targets:
+  ClauseShared:
+    type: framework
+    platform: macOS
+    sources:
+      - ClauseShared
+    settings:
+      base:
+        PRODUCT_NAME: ClauseShared
+        PRODUCT_BUNDLE_IDENTIFIER: com.ceaksan.clause.shared
+        GENERATE_INFOPLIST_FILE: YES
+
+  Clause:
+    type: application
+    platform: macOS
+    sources:
+      - ClauseApp
+    dependencies:
+      - target: ClauseShared
+    settings:
+      base:
+        PRODUCT_NAME: Clause
+        PRODUCT_BUNDLE_IDENTIFIER: com.ceaksan.clause
+        GENERATE_INFOPLIST_FILE: YES
+        INFOPLIST_KEY_LSUIElement: true
+    scheme:
+      testTargets:
+        - ClauseAppTests
+
+  ClauseMCP:
+    type: tool
+    platform: macOS
+    sources:
+      - ClauseMCP
+    dependencies:
+      - target: ClauseShared
+      - package: MCP
+    settings:
+      base:
+        PRODUCT_NAME: clause-mcp
+        PRODUCT_BUNDLE_IDENTIFIER: com.ceaksan.clause.mcp
+        GENERATE_INFOPLIST_FILE: YES
+
+  ClauseSharedTests:
+    type: bundle.unit-test
+    platform: macOS
+    sources:
+      - ClauseSharedTests
+    dependencies:
+      - target: ClauseShared
+
+  ClauseAppTests:
+    type: bundle.unit-test
+    platform: macOS
+    sources:
+      - ClauseAppTests
+    dependencies:
+      - target: Clause
+
+schemes:
+  Clause:
+    build:
+      targets:
+        Clause: all
+    run:
+      config: Debug
+    test:
+      config: Debug
+      targets:
+        - ClauseAppTests
+  ClauseMCP:
+    build:
+      targets:
+        ClauseMCP: all
+    run:
+      config: Debug
+  ClauseShared:
+    build:
+      targets:
+        ClauseShared: all
+    test:
+      config: Debug
+      targets:
+        - ClauseSharedTests
