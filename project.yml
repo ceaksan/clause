@@ -65,6 +65,9 @@ targets:
       - ClauseSharedTests
     dependencies:
       - target: ClauseShared
+    settings:
+      base:
+        GENERATE_INFOPLIST_FILE: YES
 
   ClauseAppTests:
     type: bundle.unit-test

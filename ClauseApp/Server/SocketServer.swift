@@ -1,13 +1,17 @@
 import Foundation
-import Network
 import ClauseShared
+
+#if canImport(Darwin)
+import Darwin
+#endif
 
 @MainActor
 final class SocketServer {
-    private var listener: NWListener?
-    private var connections: [UUID: NWConnection] = [:]
+    private var serverFd: Int32 = -1
+    private var acceptSource: DispatchSourceRead?
+    private var clientSources: [Int32: DispatchSourceRead] = [:]
+    private var clientBuffers: [Int32: Data] = [:]
     private let noteStore: NoteStore
-    private var buffer: [UUID: Data] = [:]
 
     init(noteStore: NoteStore) {
         self.noteStore = noteStore
@@ -19,42 +23,90 @@ final class SocketServer {
 
         let socketPath = ClauseConstants.socketPath
 
-        do {
-            let params = NWParameters()
-            params.allowLocalEndpointReuse = true
-            params.requiredLocalEndpoint = NWEndpoint.unix(path: socketPath)
-            listener = try NWListener(using: params)
-        } catch {
-            print("Listener creation failed: \(error)")
+        // Create socket
+        serverFd = socket(AF_UNIX, SOCK_STREAM, 0)
+        guard serverFd >= 0 else {
+            print("Failed to create socket: \(errno)")
             return
         }
 
-        listener?.stateUpdateHandler = { [weak self] state in
-            Task { @MainActor in
-                self?.handleListenerState(state)
+        // Bind
+        var addr = sockaddr_un()
+        addr.sun_family = sa_family_t(AF_UNIX)
+        let pathBytes = socketPath.utf8CString
+        guard pathBytes.count <= MemoryLayout.size(ofValue: addr.sun_path) else {
+            print("Socket path too long")
+            Darwin.close(serverFd)
+            serverFd = -1
+            return
+        }
+        withUnsafeMutablePointer(to: &addr.sun_path) { ptr in
+            ptr.withMemoryRebound(to: CChar.self, capacity: pathBytes.count) { dest in
+                for i in 0..<pathBytes.count {
+                    dest[i] = pathBytes[i]
+                }
             }
         }
 
-        listener?.newConnectionHandler = { [weak self] connection in
-            Task { @MainActor in
-                self?.handleNewConnection(connection)
+        let bindResult = withUnsafePointer(to: &addr) { ptr in
+            ptr.withMemoryRebound(to: sockaddr.self, capacity: 1) { sockPtr in
+                bind(serverFd, sockPtr, socklen_t(MemoryLayout<sockaddr_un>.size))
             }
         }
+        guard bindResult == 0 else {
+            print("Failed to bind socket: \(errno)")
+            Darwin.close(serverFd)
+            serverFd = -1
+            return
+        }
 
-        listener?.start(queue: .main)
+        // Listen
+        guard listen(serverFd, 5) == 0 else {
+            print("Failed to listen: \(errno)")
+            Darwin.close(serverFd)
+            serverFd = -1
+            return
+        }
+
+        // Set non-blocking
+        let flags = fcntl(serverFd, F_GETFL)
+        _ = fcntl(serverFd, F_SETFL, flags | O_NONBLOCK)
+
+        // Accept connections via DispatchSource
+        let source = DispatchSource.makeReadSource(fileDescriptor: serverFd, queue: .main)
+        source.setEventHandler { [weak self] in
+            self?.acceptConnection()
+        }
+        source.setCancelHandler { [weak self] in
+            if let fd = self?.serverFd, fd >= 0 {
+                Darwin.close(fd)
+                self?.serverFd = -1
+            }
+        }
+        source.resume()
+        acceptSource = source
+
+        print("Socket server ready at \(socketPath)")
     }
 
     func stop() {
+        // Notify connected CLIs
         let shutdown = IPCResponse(shutdown: ShutdownInfo(reason: "app_quit"))
-        for (_, connection) in connections {
-            sendResponse(shutdown, to: connection)
-            connection.cancel()
+        for (fd, _) in clientSources {
+            sendResponse(shutdown, to: fd)
+            Darwin.close(fd)
         }
-        connections.removeAll()
-        buffer.removeAll()
+        clientSources.values.forEach { $0.cancel() }
+        clientSources.removeAll()
+        clientBuffers.removeAll()
 
-        listener?.cancel()
-        listener = nil
+        acceptSource?.cancel()
+        acceptSource = nil
+
+        if serverFd >= 0 {
+            Darwin.close(serverFd)
+            serverFd = -1
+        }
         removeStaleSocket()
     }
 
@@ -75,68 +127,67 @@ final class SocketServer {
         }
     }
 
-    private func handleListenerState(_ state: NWListener.State) {
-        switch state {
-        case .ready:
-            print("Socket server ready at \(ClauseConstants.socketPath)")
-        case .failed(let error):
-            print("Listener failed: \(error). Retrying in 1s...")
-            Task {
-                try? await Task.sleep(for: .seconds(1))
-                self.start()
+    private func acceptConnection() {
+        var clientAddr = sockaddr_un()
+        var clientLen = socklen_t(MemoryLayout<sockaddr_un>.size)
+
+        let fd = serverFd
+        let clientFd = withUnsafeMutablePointer(to: &clientAddr) { ptr in
+            ptr.withMemoryRebound(to: sockaddr.self, capacity: 1) { sockPtr in
+                accept(fd, sockPtr, &clientLen)
             }
-        default:
-            break
         }
+
+        guard clientFd >= 0 else { return }
+
+        // Set non-blocking
+        let flags = fcntl(clientFd, F_GETFL)
+        _ = fcntl(clientFd, F_SETFL, flags | O_NONBLOCK)
+
+        setupClientSource(fd: clientFd)
     }
 
-    private func handleNewConnection(_ connection: NWConnection) {
-        let connectionId = UUID()
-        connections[connectionId] = connection
-        buffer[connectionId] = Data()
+    private func setupClientSource(fd: Int32) {
+        clientBuffers[fd] = Data()
 
-        connection.stateUpdateHandler = { [weak self] state in
+        let source = DispatchSource.makeReadSource(fileDescriptor: fd, queue: .main)
+        source.setEventHandler { [weak self] in
             Task { @MainActor in
-                switch state {
-                case .ready:
-                    print("CLI connected: \(connectionId)")
-                case .failed, .cancelled:
-                    self?.connections.removeValue(forKey: connectionId)
-                    self?.buffer.removeValue(forKey: connectionId)
-                    print("CLI disconnected: \(connectionId)")
-                default:
-                    break
-                }
+                self?.readFromClient(fd: fd)
             }
         }
-
-        connection.start(queue: .main)
-        receiveData(from: connection, id: connectionId)
-    }
-
-    private func receiveData(from connection: NWConnection, id: UUID) {
-        connection.receive(minimumIncompleteLength: 1, maximumLength: 65536) { [weak self] data, _, isComplete, error in
-            Task { @MainActor in
-                guard let self else { return }
-
-                if let data, !data.isEmpty {
-                    self.buffer[id, default: Data()].append(data)
-                    self.processBuffer(connectionId: id)
-                }
-
-                if isComplete || error != nil {
-                    self.connections.removeValue(forKey: id)
-                    self.buffer.removeValue(forKey: id)
-                    return
-                }
-
-                self.receiveData(from: connection, id: id)
-            }
+        source.setCancelHandler {
+            Darwin.close(fd)
         }
+        source.resume()
+        clientSources[fd] = source
+
+        print("CLI connected: fd=\(fd)")
     }
 
-    private func processBuffer(connectionId: UUID) {
-        guard var data = buffer[connectionId] else { return }
+    private func readFromClient(fd: Int32) {
+        var buf = [UInt8](repeating: 0, count: 65536)
+        let bytesRead = read(fd, &buf, buf.count)
+
+        if bytesRead <= 0 {
+            // EOF or error
+            disconnectClient(fd: fd)
+            return
+        }
+
+        clientBuffers[fd, default: Data()].append(Data(buf[..<bytesRead]))
+        processBuffer(fd: fd)
+    }
+
+    private func disconnectClient(fd: Int32) {
+        clientSources[fd]?.cancel()
+        clientSources.removeValue(forKey: fd)
+        clientBuffers.removeValue(forKey: fd)
+        print("CLI disconnected: fd=\(fd)")
+    }
+
+    private func processBuffer(fd: Int32) {
+        guard var data = clientBuffers[fd] else { return }
         let newline = UInt8(ascii: "\n")
 
         while let newlineIndex = data.firstIndex(of: newline) {
@@ -145,13 +196,11 @@ final class SocketServer {
 
             if let request = try? JSONDecoder().decode(IPCRequest.self, from: Data(messageData)) {
                 let response = handleRequest(request)
-                if let connection = connections[connectionId] {
-                    sendResponse(response, to: connection)
-                }
+                sendResponse(response, to: fd)
             }
         }
 
-        buffer[connectionId] = Data(data)
+        clientBuffers[fd] = Data(data)
     }
 
     private func handleRequest(_ request: IPCRequest) -> IPCResponse {
@@ -271,14 +320,12 @@ final class SocketServer {
         return IPCResponse(result: ["cleared": .int(count)], reqId: request.reqId)
     }
 
-    private func sendResponse(_ response: IPCResponse, to connection: NWConnection) {
+    private func sendResponse(_ response: IPCResponse, to fd: Int32) {
         guard let data = try? JSONEncoder().encode(response) else { return }
         var message = data
         message.append(UInt8(ascii: "\n"))
-        connection.send(content: message, completion: .contentProcessed { error in
-            if let error {
-                print("Send error: \(error)")
-            }
-        })
+        message.withUnsafeBytes { ptr in
+            _ = write(fd, ptr.baseAddress!, ptr.count)
+        }
     }
 }
