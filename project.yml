@@ -73,6 +73,9 @@ targets:
       - ClauseAppTests
     dependencies:
       - target: Clause
+    settings:
+      base:
+        GENERATE_INFOPLIST_FILE: YES
 
 schemes:
   Clause:
