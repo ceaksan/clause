@@ -93,8 +93,14 @@ See [architecture.md](architecture.md) for full technical details.
 ## Roadmap
 
 - [x] Milestone 1: CLI MCP server + floating window + bidirectional IPC
-- [ ] Milestone 2: Global hotkey (Cmd+Shift+N), session cleanup, accessibility
-- [ ] Milestone 3: Distribution (DMG, Homebrew tap)
+- [ ] Milestone 2:
+  - Global hotkey (Cmd+Shift+N) to capture clipboard content as a note
+  - Multi-session tabs (each Claude Code session gets its own tab)
+  - Session cleanup (auto-remove old JSON files)
+  - Accessibility permission handling with fallback UI
+  - Pin/unpin floating window (toggle already built)
+  - Note search and filtering in the UI
+- [ ] Milestone 3: Distribution (DMG, Homebrew cask, code signing)
 
 ## Tech Stack
 
