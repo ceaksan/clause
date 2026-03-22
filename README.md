@@ -2,32 +2,38 @@
 
 A minimal, ephemeral note-taking companion for Claude Code sessions.
 
-<!-- TODO: Add screenshot -->
+<p align="center">
+  <video src="assets/demo.mp4" autoplay loop muted playsinline width="800"></video>
+</p>
+
+## Why Clause?
+
+During Claude Code sessions, you accumulate scratch context: decisions made, warnings to remember, TODOs to track. This context lives in your head or gets buried in terminal output. Clause gives it a visible, structured home that both you and Claude can read and write to, in real time.
 
 ## What it does
 
-Clause is a floating scratchpad that lives alongside your terminal. Claude Code pushes notes, todos, and warnings to it during sessions via MCP tools. You can also add your own notes directly. Everything stays visible in a floating panel while you work — and disappears when the session ends.
+Clause is a floating scratchpad that lives alongside your terminal. Claude Code pushes notes, todos, and warnings to it during sessions via MCP tools. You can also add your own notes directly. Everything stays visible in a floating panel while you work, and disappears when the session ends.
 
 ## How it works
 
 Clause uses a two-process architecture:
 
-1. **`clause-mcp`** — CLI binary spawned by Claude Code as an MCP server (stdio transport)
-2. **`Clause.app`** — SwiftUI floating window that manages and displays notes
+1. **`clause-mcp`** : CLI binary spawned by Claude Code as an MCP server (stdio transport)
+2. **`Clause.app`** : SwiftUI floating window that manages and displays notes
 3. Both processes communicate via Unix domain socket at `~/.clause/clause.sock`
 
 Claude Code spawns `clause-mcp`, which connects to the running `Clause.app` instance. All MCP tool calls are forwarded over the socket in real time.
 
 ## MCP Tools
 
-| Tool | Description |
-|---|---|
-| `set_session` | Set the current session name and context |
-| `add_note` | Add a note, todo, or warning to the panel |
-| `list_notes` | List all notes in the current session |
-| `edit_note` | Update an existing note by ID |
-| `delete_note` | Remove a note by ID |
-| `clear_notes` | Clear all notes for the current session |
+| Tool          | Description                               |
+| ------------- | ----------------------------------------- |
+| `set_session` | Set the current session name and context  |
+| `add_note`    | Add a note, todo, or warning to the panel |
+| `list_notes`  | List all notes in the current session     |
+| `edit_note`   | Update an existing note by ID             |
+| `delete_note` | Remove a note by ID                       |
+| `clear_notes` | Clear all notes for the current session   |
 
 ## Requirements
 
@@ -35,30 +41,16 @@ Claude Code spawns `clause-mcp`, which connects to the running `Clause.app` inst
 - Xcode 16+
 - Swift 6
 
-## Installation
-
-Build from source:
+## Quick Start
 
 ```bash
-# 1. Clone the repo
 git clone https://github.com/ceaksan/clause.git
 cd clause
-
-# 2. Install xcodegen if needed
-brew install xcodegen
-
-# 3. Generate the Xcode project
-xcodegen generate
-
-# 4. Open in Xcode
+brew install xcodegen && xcodegen generate
 open Clause.xcodeproj
 ```
 
-Build and run the `Clause` scheme in Xcode.
-
-## Claude Code Configuration
-
-Add `clause-mcp` to your Claude Code MCP configuration:
+Build and run the **Clause** scheme in Xcode, then add `clause-mcp` to your Claude Code config:
 
 ```json
 {
