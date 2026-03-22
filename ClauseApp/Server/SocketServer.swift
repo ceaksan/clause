@@ -169,8 +169,12 @@ final class SocketServer {
         var buf = [UInt8](repeating: 0, count: 65536)
         let bytesRead = read(fd, &buf, buf.count)
 
-        if bytesRead <= 0 {
-            // EOF or error
+        if bytesRead == 0 {
+            disconnectClient(fd: fd)
+            return
+        }
+        if bytesRead < 0 {
+            if errno == EAGAIN || errno == EWOULDBLOCK { return }
             disconnectClient(fd: fd)
             return
         }
