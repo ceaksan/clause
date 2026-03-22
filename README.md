@@ -3,7 +3,7 @@
 A minimal, ephemeral note-taking companion for Claude Code sessions.
 
 <p align="center">
-  <video src="assets/demo.mp4" autoplay loop muted playsinline width="800"></video>
+  <img src="assets/demo.gif" alt="Clause demo: Claude Code session with floating note panel" width="800">
 </p>
 
 ## Why Clause?
