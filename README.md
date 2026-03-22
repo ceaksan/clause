@@ -100,6 +100,7 @@ See [architecture.md](architecture.md) for full technical details.
   - Accessibility permission handling with fallback UI
   - Pin/unpin floating window (toggle already built)
   - Note search and filtering in the UI
+  - `completed` filter for `list_notes` tool
 - [ ] Milestone 3: Distribution (DMG, Homebrew cask, code signing)
 
 ## Tech Stack
