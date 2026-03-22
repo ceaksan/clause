@@ -5,6 +5,7 @@ struct ContentView: View {
     @Environment(NoteStore.self) private var noteStore
     @State private var inputText = ""
     @State private var selectedType: Note.NoteType = .note
+    @State private var isFloating = true
 
     var body: some View {
         VStack(spacing: 0) {
@@ -47,6 +48,14 @@ struct ContentView: View {
                 Circle()
                     .fill(noteStore.isSessionActive ? Color.green : Color(white: 0.33))
                     .frame(width: 6, height: 6)
+
+                Button(action: { toggleFloating() }) {
+                    Image(systemName: isFloating ? "pin.fill" : "pin.slash")
+                        .font(.system(size: 10))
+                        .foregroundStyle(isFloating ? Color(white: 0.83) : Color(white: 0.33))
+                }
+                .buttonStyle(.plain)
+                .help(isFloating ? "Unpin from top" : "Pin to top")
             }
         }
         .padding(.horizontal, 14)
@@ -82,5 +91,12 @@ struct ContentView: View {
         guard !trimmed.isEmpty else { return }
         noteStore.addNote(text: trimmed, source: .user, type: selectedType)
         inputText = ""
+    }
+
+    private func toggleFloating() {
+        isFloating.toggle()
+        if let window = NSApp.windows.first {
+            window.level = isFloating ? .floating : .normal
+        }
     }
 }

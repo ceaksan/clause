@@ -17,7 +17,7 @@ settings:
 
 targets:
   ClauseShared:
-    type: framework
+    type: library.static
     platform: macOS
     sources:
       - ClauseShared

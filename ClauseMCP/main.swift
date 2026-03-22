@@ -1,22 +1,36 @@
 import Foundation
-import Network
 import ClauseShared
 import MCP
+import Logging
 
-// MARK: - Socket Client
+#if canImport(Darwin)
+import Darwin
+#endif
+
+// MARK: - Debug Logging
+
+func log(_ msg: String) {
+    FileHandle.standardError.write(Data("[clause-mcp] \(msg)\n".utf8))
+}
+
+// MARK: - Socket Client (POSIX)
 
 final class SocketClient: @unchecked Sendable {
-    private var connection: NWConnection?
+    private var fd: Int32 = -1
     private var buffer = Data()
     private var pendingRequests: [String: CheckedContinuation<IPCResponse, Error>] = [:]
+    private var readSource: DispatchSourceRead?
     private let queue = DispatchQueue(label: "clause.socket")
 
     func connect() async throws {
         let socketPath = ClauseConstants.socketPath
+        log("Connecting to socket: \(socketPath)")
 
         do {
-            try await tryConnect(path: socketPath)
+            try posixConnect(path: socketPath)
+            log("Socket connected")
         } catch {
+            log("Direct connect failed: \(error), launching Clause.app")
             let process = Process()
             process.executableURL = URL(fileURLWithPath: "/usr/bin/open")
             process.arguments = ["-a", "Clause"]
@@ -30,7 +44,8 @@ final class SocketClient: @unchecked Sendable {
             while Date() < deadline {
                 try await Task.sleep(for: .milliseconds(Int(interval * 1000)))
                 do {
-                    try await tryConnect(path: socketPath)
+                    try posixConnect(path: socketPath)
+                    log("Socket connected after retry")
                     return
                 } catch {
                     interval = min(interval * multiplier, maxInterval)
@@ -40,68 +55,96 @@ final class SocketClient: @unchecked Sendable {
         }
     }
 
-    private func tryConnect(path: String) async throws {
-        try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
-            let endpoint = NWEndpoint.unix(path: path)
-            let conn = NWConnection(to: endpoint, using: NWParameters())
-
-            conn.stateUpdateHandler = { state in
-                switch state {
-                case .ready:
-                    continuation.resume()
-                case .failed(let error):
-                    continuation.resume(throwing: error)
-                default:
-                    break
-                }
-            }
-
-            self.connection = conn
-            conn.start(queue: self.queue)
-            self.startReceiving()
+    private func posixConnect(path: String) throws {
+        let sockFd = socket(AF_UNIX, SOCK_STREAM, 0)
+        guard sockFd >= 0 else {
+            throw NSError(domain: "Clause", code: 1, userInfo: [NSLocalizedDescriptionKey: "Failed to create socket"])
         }
+
+        var addr = sockaddr_un()
+        addr.sun_family = sa_family_t(AF_UNIX)
+        let pathBytes = path.utf8CString
+        guard pathBytes.count <= MemoryLayout.size(ofValue: addr.sun_path) else {
+            Darwin.close(sockFd)
+            throw NSError(domain: "Clause", code: 1, userInfo: [NSLocalizedDescriptionKey: "Socket path too long"])
+        }
+        withUnsafeMutablePointer(to: &addr.sun_path) { ptr in
+            ptr.withMemoryRebound(to: CChar.self, capacity: pathBytes.count) { dest in
+                for i in 0..<pathBytes.count { dest[i] = pathBytes[i] }
+            }
+        }
+
+        let result = withUnsafePointer(to: &addr) { ptr in
+            ptr.withMemoryRebound(to: sockaddr.self, capacity: 1) { sockPtr in
+                Darwin.connect(sockFd, sockPtr, socklen_t(MemoryLayout<sockaddr_un>.size))
+            }
+        }
+        guard result == 0 else {
+            Darwin.close(sockFd)
+            throw NSError(domain: "Clause", code: 1, userInfo: [NSLocalizedDescriptionKey: "Connect failed: errno \(errno)"])
+        }
+
+        // Set non-blocking for reads
+        let flags = fcntl(sockFd, F_GETFL)
+        _ = fcntl(sockFd, F_SETFL, flags | O_NONBLOCK)
+
+        self.fd = sockFd
+        startReceiving()
     }
 
     func send(_ request: IPCRequest) async throws -> IPCResponse {
-        guard let connection else {
+        guard fd >= 0 else {
             throw NSError(domain: "Clause", code: 2, userInfo: [NSLocalizedDescriptionKey: "Not connected"])
         }
 
         var data = try JSONEncoder().encode(request)
         data.append(UInt8(ascii: "\n"))
 
-        return try await withCheckedThrowingContinuation { continuation in
-            pendingRequests[request.reqId] = continuation
+        // Write synchronously (small messages)
+        let written = data.withUnsafeBytes { ptr in
+            Darwin.write(fd, ptr.baseAddress!, ptr.count)
+        }
+        guard written == data.count else {
+            throw NSError(domain: "Clause", code: 2, userInfo: [NSLocalizedDescriptionKey: "Write failed"])
+        }
 
-            connection.send(content: data, completion: .contentProcessed { error in
-                if let error {
-                    self.pendingRequests.removeValue(forKey: request.reqId)
-                    continuation.resume(throwing: error)
-                }
-            })
+        return try await withCheckedThrowingContinuation { continuation in
+            queue.sync {
+                pendingRequests[request.reqId] = continuation
+            }
 
             Task {
                 try await Task.sleep(for: .seconds(ClauseConstants.requestTimeoutSeconds))
-                if let pending = self.pendingRequests.removeValue(forKey: request.reqId) {
-                    pending.resume(throwing: NSError(domain: "Clause", code: 3, userInfo: [NSLocalizedDescriptionKey: "Request timeout"]))
+                let pending = self.queue.sync {
+                    self.pendingRequests.removeValue(forKey: request.reqId)
                 }
+                pending?.resume(throwing: NSError(domain: "Clause", code: 3, userInfo: [NSLocalizedDescriptionKey: "Request timeout"]))
             }
         }
     }
 
     private func startReceiving() {
-        connection?.receive(minimumIncompleteLength: 1, maximumLength: 65536) { [weak self] data, _, isComplete, error in
-            guard let self else { return }
-
-            if let data {
-                self.buffer.append(data)
-                self.processBuffer()
-            }
-
-            if !isComplete && error == nil {
-                self.startReceiving()
+        let source = DispatchSource.makeReadSource(fileDescriptor: fd, queue: queue)
+        source.setEventHandler { [weak self] in
+            self?.readAvailable()
+        }
+        source.setCancelHandler { [weak self] in
+            if let fd = self?.fd, fd >= 0 {
+                Darwin.close(fd)
+                self?.fd = -1
             }
         }
+        source.resume()
+        readSource = source
+    }
+
+    private func readAvailable() {
+        var buf = [UInt8](repeating: 0, count: 65536)
+        let bytesRead = read(fd, &buf, buf.count)
+        guard bytesRead > 0 else { return }
+
+        buffer.append(Data(buf[..<bytesRead]))
+        processBuffer()
     }
 
     private func processBuffer() {
@@ -111,16 +154,15 @@ final class SocketClient: @unchecked Sendable {
             buffer = Data(buffer[buffer.index(after: index)...])
 
             if let response = try? JSONDecoder().decode(IPCResponse.self, from: Data(messageData)) {
-                if let continuation = pendingRequests.removeValue(forKey: response.reqId) {
-                    continuation.resume(returning: response)
-                }
+                let continuation = pendingRequests.removeValue(forKey: response.reqId)
+                continuation?.resume(returning: response)
             }
         }
     }
 
     func disconnect() {
-        connection?.cancel()
-        connection = nil
+        readSource?.cancel()
+        readSource = nil
     }
 }
 
@@ -202,6 +244,7 @@ let tools: [Tool] = [
 let socketClient = SocketClient()
 
 func handleToolCall(name: String, arguments: [String: Value]?) async throws -> String {
+    log("handleToolCall: \(name)")
     var params: [String: IPCValue] = [:]
 
     if let args = arguments {
@@ -230,6 +273,10 @@ func handleToolCall(name: String, arguments: [String: Value]?) async throws -> S
 
 // MARK: - Main
 
+signal(SIGPIPE, SIG_IGN)
+
+log("Starting clause-mcp")
+
 let server = Server(
     name: "clause",
     version: "0.1.0",
@@ -237,7 +284,8 @@ let server = Server(
 )
 
 await server.withMethodHandler(ListTools.self) { _ in
-    ListTools.Result(tools: tools)
+    log("ListTools called")
+    return ListTools.Result(tools: tools)
 }
 
 await server.withMethodHandler(CallTool.self) { params in
@@ -249,12 +297,20 @@ await server.withMethodHandler(CallTool.self) { params in
     }
 }
 
+log("Handlers registered, connecting to socket...")
+
 do {
     try await socketClient.connect()
-    let transport = StdioTransport()
+    log("Socket connected, starting MCP transport...")
+    let logger = Logger(label: "clause.stdio")
+    let transport = StdioTransport(logger: logger)
+    log("Starting server...")
     try await server.start(transport: transport)
+    log("Server started, waiting...")
     await server.waitUntilCompleted()
+    log("Server completed")
 } catch {
+    log("FATAL: \(error)")
     FileHandle.standardError.write(Data("Clause MCP error: \(error)\n".utf8))
     exit(1)
 }

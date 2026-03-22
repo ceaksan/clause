@@ -16,7 +16,7 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "79A9BDE920131998B23CB3D6"
-               BuildableName = "ClauseShared.framework"
+               BuildableName = "libClauseShared.a"
                BlueprintName = "ClauseShared"
                ReferencedContainer = "container:Clause.xcodeproj">
             </BuildableReference>
@@ -33,7 +33,7 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "79A9BDE920131998B23CB3D6"
-            BuildableName = "ClauseShared.framework"
+            BuildableName = "libClauseShared.a"
             BlueprintName = "ClauseShared"
             ReferencedContainer = "container:Clause.xcodeproj">
          </BuildableReference>
@@ -68,7 +68,7 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "79A9BDE920131998B23CB3D6"
-            BuildableName = "ClauseShared.framework"
+            BuildableName = "libClauseShared.a"
             BlueprintName = "ClauseShared"
             ReferencedContainer = "container:Clause.xcodeproj">
          </BuildableReference>
@@ -84,7 +84,7 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "79A9BDE920131998B23CB3D6"
-            BuildableName = "ClauseShared.framework"
+            BuildableName = "libClauseShared.a"
             BlueprintName = "ClauseShared"
             ReferencedContainer = "container:Clause.xcodeproj">
          </BuildableReference>

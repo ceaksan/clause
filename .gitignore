@@ -14,5 +14,8 @@ Package.resolved
 *.swp
 *~
 
+# Built app
+*.app
+
 # Superpowers
 .superpowers/

@@ -8,25 +8,23 @@
 
 /* Begin PBXBuildFile section */
 		01300ECB5FA11C4CC44794BD /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 376F1FB5A9554255BA418683 /* ContentView.swift */; };
-		3E76B1BE5B77E7B59D5362BA /* ClauseShared.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 760C52F32197DFBFC4CE570D /* ClauseShared.framework */; };
-		415217BFB4004AB94801F2B0 /* ClauseShared.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 760C52F32197DFBFC4CE570D /* ClauseShared.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		0B6214FC7F57D0EA2C4676AE /* libClauseShared.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 1C399553432E23CF791F2A47 /* libClauseShared.a */; };
+		42F860E5B3D647E84A4B31D7 /* libClauseShared.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 1C399553432E23CF791F2A47 /* libClauseShared.a */; };
 		44D97E1EBC8E6D8F154EF45B /* NoteRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 138A7CD25F661A758BE70A02 /* NoteRowView.swift */; };
 		48381B58342B35567A1DA76F /* InputBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = C7BB034C8304955109B69E0D /* InputBar.swift */; };
-		512A7AD22FAEE8F914C5DDD8 /* ClauseShared.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 760C52F32197DFBFC4CE570D /* ClauseShared.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		6092138D1E463213220FD98B /* SocketConstants.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED758C671D85AC61CED9A543 /* SocketConstants.swift */; };
 		63D0B1F7C4E6FC6EA6C17699 /* Session.swift in Sources */ = {isa = PBXBuildFile; fileRef = 085996F2046732434C440213 /* Session.swift */; };
 		66B058624A8197161A08EA66 /* NoteStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = EAE62D0D99F493CAE644F711 /* NoteStore.swift */; };
-		77E4876E860205A5F311D778 /* ClauseShared.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 760C52F32197DFBFC4CE570D /* ClauseShared.framework */; };
 		847BDEB4CFFE46737050C21E /* ClauseApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E679C9171C5DCA7D632CF7D /* ClauseApp.swift */; };
 		99D0D9900BB78846D34962C3 /* Note.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6AC6AECC6F2F2F123FB848DD /* Note.swift */; };
 		9AF812BD5CE750C93B9993FD /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF7BD58B9A9A00832D0B5EB5 /* AppDelegate.swift */; };
 		A90E0712316726C773EA5976 /* MCP in Frameworks */ = {isa = PBXBuildFile; productRef = BD9504F69239A18F47DDFF81 /* MCP */; };
-		AC36A668B9787E2505E9EB3C /* ClauseShared.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 760C52F32197DFBFC4CE570D /* ClauseShared.framework */; };
 		B01C80915E0B39E25CF34420 /* NoteStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0CD1959E5F356F45E8E42BD2 /* NoteStoreTests.swift */; };
 		B0DD178F37A3252D8E306470 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8C822B03054F032A778F5330 /* main.swift */; };
 		B1D86546D07B1CD35913E477 /* FloatingPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD3E173B6E844ED735795360 /* FloatingPanel.swift */; };
 		D3B95D74ABCC678207F67934 /* ModelsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 09A88343C537438E37A6A2EE /* ModelsTests.swift */; };
 		F16C801EB9EBCBDD8956D45F /* MessageTypes.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA6DC0182162E8A2D125D3F9 /* MessageTypes.swift */; };
+		F54129C3A1121A20E9DB6E4E /* libClauseShared.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 1C399553432E23CF791F2A47 /* libClauseShared.a */; };
 		FE561D4E25F9256582579B45 /* SocketServer.swift in Sources */ = {isa = PBXBuildFile; fileRef = B9BF5775CC89F09D26141B05 /* SocketServer.swift */; };
 /* End PBXBuildFile section */
 
@@ -61,40 +59,15 @@
 		};
 /* End PBXContainerItemProxy section */
 
-/* Begin PBXCopyFilesBuildPhase section */
-		5EB9FE62CADE5CF14FD7E56E /* Embed Frameworks */ = {
-			isa = PBXCopyFilesBuildPhase;
-			buildActionMask = 2147483647;
-			dstPath = "";
-			dstSubfolderSpec = 10;
-			files = (
-				512A7AD22FAEE8F914C5DDD8 /* ClauseShared.framework in Embed Frameworks */,
-			);
-			name = "Embed Frameworks";
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		D991D85C3DE2826235DDDB5A /* Embed Frameworks */ = {
-			isa = PBXCopyFilesBuildPhase;
-			buildActionMask = 2147483647;
-			dstPath = "";
-			dstSubfolderSpec = 10;
-			files = (
-				415217BFB4004AB94801F2B0 /* ClauseShared.framework in Embed Frameworks */,
-			);
-			name = "Embed Frameworks";
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-/* End PBXCopyFilesBuildPhase section */
-
 /* Begin PBXFileReference section */
 		085996F2046732434C440213 /* Session.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Session.swift; sourceTree = "<group>"; };
 		09A88343C537438E37A6A2EE /* ModelsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModelsTests.swift; sourceTree = "<group>"; };
 		0CD1959E5F356F45E8E42BD2 /* NoteStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoteStoreTests.swift; sourceTree = "<group>"; };
 		138A7CD25F661A758BE70A02 /* NoteRowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoteRowView.swift; sourceTree = "<group>"; };
+		1C399553432E23CF791F2A47 /* libClauseShared.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libClauseShared.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		1E679C9171C5DCA7D632CF7D /* ClauseApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClauseApp.swift; sourceTree = "<group>"; };
 		376F1FB5A9554255BA418683 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		6AC6AECC6F2F2F123FB848DD /* Note.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Note.swift; sourceTree = "<group>"; };
-		760C52F32197DFBFC4CE570D /* ClauseShared.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = ClauseShared.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		7C562DBBEEC1CF92397BDFCF /* ClauseAppTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ClauseAppTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		8C822B03054F032A778F5330 /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
 		A525275A63208D55C759F6DE /* Clause.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Clause.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -114,7 +87,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				77E4876E860205A5F311D778 /* ClauseShared.framework in Frameworks */,
+				42F860E5B3D647E84A4B31D7 /* libClauseShared.a in Frameworks */,
 				A90E0712316726C773EA5976 /* MCP in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -123,7 +96,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				3E76B1BE5B77E7B59D5362BA /* ClauseShared.framework in Frameworks */,
+				F54129C3A1121A20E9DB6E4E /* libClauseShared.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -131,7 +104,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				AC36A668B9787E2505E9EB3C /* ClauseShared.framework in Frameworks */,
+				0B6214FC7F57D0EA2C4676AE /* libClauseShared.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -165,8 +138,8 @@
 				A525275A63208D55C759F6DE /* Clause.app */,
 				7C562DBBEEC1CF92397BDFCF /* ClauseAppTests.xctest */,
 				AEB6F4092B029A2FC4D1523A /* ClauseMCP */,
-				760C52F32197DFBFC4CE570D /* ClauseShared.framework */,
 				D310260CFB7330E22195A00F /* ClauseSharedTests.xctest */,
+				1C399553432E23CF791F2A47 /* libClauseShared.a */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -289,7 +262,6 @@
 			buildPhases = (
 				FCEE14373022A7ABC2A5F109 /* Sources */,
 				C0CBE48298C1257FC0812C5E /* Frameworks */,
-				D991D85C3DE2826235DDDB5A /* Embed Frameworks */,
 			);
 			buildRules = (
 			);
@@ -309,7 +281,6 @@
 			buildPhases = (
 				FB337C525E4505CF0D65BDEC /* Sources */,
 				B55BE665216C3162B8B5EF23 /* Frameworks */,
-				5EB9FE62CADE5CF14FD7E56E /* Embed Frameworks */,
 			);
 			buildRules = (
 			);
@@ -328,6 +299,7 @@
 			buildConfigurationList = B9EFE695484761A150145499 /* Build configuration list for PBXNativeTarget "ClauseShared" */;
 			buildPhases = (
 				B239F1A69469FC13C39FC6C8 /* Sources */,
+				4B52D47195D6B3EF471B3EDF /* Copy Swift Objective-C Interface Header */,
 			);
 			buildRules = (
 			);
@@ -337,8 +309,8 @@
 			packageProductDependencies = (
 			);
 			productName = ClauseShared;
-			productReference = 760C52F32197DFBFC4CE570D /* ClauseShared.framework */;
-			productType = "com.apple.product-type.framework";
+			productReference = 1C399553432E23CF791F2A47 /* libClauseShared.a */;
+			productType = "com.apple.product-type.library.static";
 		};
 		82F7DFA3BCFC8B201487E667 /* ClauseAppTests */ = {
 			isa = PBXNativeTarget;
@@ -394,6 +366,25 @@
 			);
 		};
 /* End PBXProject section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		4B52D47195D6B3EF471B3EDF /* Copy Swift Objective-C Interface Header */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+				"$(DERIVED_SOURCES_DIR)/$(SWIFT_OBJC_INTERFACE_HEADER_NAME)",
+			);
+			name = "Copy Swift Objective-C Interface Header";
+			outputPaths = (
+				"$(BUILT_PRODUCTS_DIR)/include/$(PRODUCT_MODULE_NAME)/$(SWIFT_OBJC_INTERFACE_HEADER_NAME)",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "ditto \"${SCRIPT_INPUT_FILE_0}\" \"${SCRIPT_OUTPUT_FILE_0}\"\n";
+		};
+/* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		0A96F31AF21EC5FFF1869F73 /* Sources */ = {
@@ -483,6 +474,10 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
+				OTHER_LDFLAGS = (
+					"$(inherited)",
+					"-ObjC",
+				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.ceaksan.clause;
 				PRODUCT_NAME = Clause;
 				SDKROOT = macosx;
@@ -492,15 +487,8 @@
 		34C9394FF5D9E8D01C95CCAC /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				CODE_SIGN_IDENTITY = "";
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 1;
-				DEFINES_MODULE = YES;
-				DYLIB_COMPATIBILITY_VERSION = 1;
-				DYLIB_CURRENT_VERSION = 1;
-				DYLIB_INSTALL_NAME_BASE = "@rpath";
 				GENERATE_INFOPLIST_FILE = YES;
-				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
@@ -509,7 +497,6 @@
 				PRODUCT_NAME = ClauseShared;
 				SDKROOT = macosx;
 				SKIP_INSTALL = YES;
-				VERSIONING_SYSTEM = "apple-generic";
 			};
 			name = Release;
 		};
@@ -523,6 +510,10 @@
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
+				);
+				OTHER_LDFLAGS = (
+					"$(inherited)",
+					"-ObjC",
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.ceaksan.clause;
 				PRODUCT_NAME = Clause;
@@ -621,6 +612,10 @@
 					"@executable_path/../Frameworks",
 					"@loader_path/../Frameworks",
 				);
+				OTHER_LDFLAGS = (
+					"$(inherited)",
+					"-ObjC",
+				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.ceaksan.ClauseSharedTests;
 				SDKROOT = macosx;
 			};
@@ -637,6 +632,10 @@
 					"@executable_path/../Frameworks",
 					"@loader_path/../Frameworks",
 				);
+				OTHER_LDFLAGS = (
+					"$(inherited)",
+					"-ObjC",
+				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.ceaksan.ClauseSharedTests;
 				SDKROOT = macosx;
 			};
@@ -645,15 +644,8 @@
 		C6A828182977293C08F15808 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				CODE_SIGN_IDENTITY = "";
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 1;
-				DEFINES_MODULE = YES;
-				DYLIB_COMPATIBILITY_VERSION = 1;
-				DYLIB_CURRENT_VERSION = 1;
-				DYLIB_INSTALL_NAME_BASE = "@rpath";
 				GENERATE_INFOPLIST_FILE = YES;
-				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
@@ -662,7 +654,6 @@
 				PRODUCT_NAME = ClauseShared;
 				SDKROOT = macosx;
 				SKIP_INSTALL = YES;
-				VERSIONING_SYSTEM = "apple-generic";
 			};
 			name = Debug;
 		};
@@ -691,6 +682,10 @@
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
+				);
+				OTHER_LDFLAGS = (
+					"$(inherited)",
+					"-ObjC",
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.ceaksan.clause.mcp;
 				PRODUCT_NAME = "clause-mcp";
@@ -762,6 +757,10 @@
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
+				);
+				OTHER_LDFLAGS = (
+					"$(inherited)",
+					"-ObjC",
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.ceaksan.clause.mcp;
 				PRODUCT_NAME = "clause-mcp";
