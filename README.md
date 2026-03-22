@@ -99,6 +99,10 @@ See [architecture.md](architecture.md) for full technical details.
 
 Swift 6, SwiftUI, AppKit, Network.framework, [modelcontextprotocol/swift-sdk](https://github.com/modelcontextprotocol/swift-sdk)
 
+## Author
+
+[@ceaksan](https://x.com/ceaksan) / [Bluesky](https://bsky.app/profile/ceaksan.com)
+
 ## License
 
 MIT
