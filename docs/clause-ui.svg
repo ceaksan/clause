@@ -1,0 +1,177 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 480" width="320" height="480">
+  <defs>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&amp;display=swap');
+      text { font-family: 'JetBrains Mono', 'SF Mono', monospace; }
+    </style>
+    <clipPath id="panel-clip">
+      <rect width="320" height="480" rx="10" ry="10"/>
+    </clipPath>
+    <!-- Subtle noise texture -->
+    <filter id="noise">
+      <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="4" stitchTiles="stitch" result="noise"/>
+      <feColorMatrix type="saturate" values="0" in="noise" result="gray-noise"/>
+      <feBlend in="SourceGraphic" in2="gray-noise" mode="overlay"/>
+    </filter>
+  </defs>
+
+  <g clip-path="url(#panel-clip)">
+    <!-- Panel background -->
+    <rect width="320" height="480" fill="rgb(26,26,26)" rx="10" ry="10"/>
+
+    <!-- Title bar background -->
+    <rect width="320" height="40" fill="rgb(18,18,18)"/>
+
+    <!-- macOS traffic lights -->
+    <circle cx="18" cy="20" r="5.5" fill="rgb(255,95,87)"/>
+    <circle cx="36" cy="20" r="5.5" fill="rgb(255,189,46)"/>
+    <circle cx="54" cy="20" r="5.5" fill="rgb(39,201,63)"/>
+
+    <!-- Session directory -->
+    <text x="72" y="18" fill="rgb(135,135,135)" font-size="9" font-weight="500">~/Documents/my-project</text>
+
+    <!-- Note count + status -->
+    <text x="252" y="18" fill="rgb(135,135,135)" font-size="9" text-anchor="end">5 notes</text>
+
+    <!-- Status dot (active) -->
+    <circle cx="260" cy="15" r="3" fill="rgb(52,199,89)"/>
+
+    <!-- Pin icon -->
+    <g transform="translate(276,11)">
+      <line x1="4" y1="0" x2="4" y2="5" stroke="rgb(212,212,212)" stroke-width="1.2" stroke-linecap="round"/>
+      <line x1="1" y1="5" x2="7" y2="5" stroke="rgb(212,212,212)" stroke-width="1.2" stroke-linecap="round"/>
+      <line x1="4" y1="5" x2="4" y2="9" stroke="rgb(212,212,212)" stroke-width="1.2" stroke-linecap="round"/>
+      <circle cx="4" cy="0" r="1" fill="rgb(212,212,212)"/>
+    </g>
+
+    <!-- Session name bar -->
+    <rect x="0" y="30" width="320" height="20" fill="rgb(22,22,22)"/>
+    <text x="12" y="44" fill="rgb(100,102,242)" font-size="10" font-weight="600">refactor-auth</text>
+    <text x="120" y="44" fill="rgb(84,84,84)" font-size="9">session active</text>
+
+    <!-- Divider -->
+    <rect x="0" y="50" width="320" height="1" fill="rgb(44,44,44)"/>
+
+    <!-- Note list area -->
+
+    <!-- Note 1: NOTE type -->
+    <g transform="translate(8,58)">
+      <rect x="0" y="0" width="304" height="68" rx="6" ry="6" fill="rgb(31,31,31)"/>
+      <!-- Left border -->
+      <rect x="0" y="0" width="3" height="68" rx="1.5" ry="0" fill="rgb(100,102,242)"/>
+      <!-- Badge -->
+      <rect x="14" y="8" width="36" height="16" rx="3" ry="3" fill="rgb(44,44,44)"/>
+      <text x="32" y="19" fill="rgb(100,102,242)" font-size="9" font-weight="600" text-anchor="middle">NOTE</text>
+      <!-- Source -->
+      <text x="58" y="19" fill="rgb(84,84,84)" font-size="9" font-weight="500">C</text>
+      <!-- Timestamp -->
+      <text x="280" y="19" fill="rgb(69,69,69)" font-size="9" text-anchor="end">14:32</text>
+      <!-- Content -->
+      <text x="14" y="38" fill="rgb(212,212,212)" font-size="12">Auth middleware uses JWT</text>
+      <text x="14" y="54" fill="rgb(212,212,212)" font-size="12">with 24h expiry. Check</text>
+      <text x="14" y="54" fill="rgb(135,135,135)" font-size="12" dx="0" dy="14">refresh token flow.</text>
+    </g>
+
+    <!-- Note 2: TODO type (uncompleted) -->
+    <g transform="translate(8,132)">
+      <rect x="0" y="0" width="304" height="52" rx="6" ry="6" fill="rgb(31,31,31)"/>
+      <!-- Left border -->
+      <rect x="0" y="0" width="3" height="52" rx="1.5" ry="0" fill="rgb(250,145,61)"/>
+      <!-- Checkbox unchecked -->
+      <rect x="14" y="8" width="14" height="14" rx="2" ry="2" fill="none" stroke="rgb(250,145,61)" stroke-width="1.2"/>
+      <!-- Source -->
+      <text x="36" y="19" fill="rgb(84,84,84)" font-size="9" font-weight="500">C</text>
+      <!-- Timestamp -->
+      <text x="280" y="19" fill="rgb(69,69,69)" font-size="9" text-anchor="end">14:33</text>
+      <!-- Content -->
+      <text x="14" y="40" fill="rgb(212,212,212)" font-size="12">Add rate limiting to /api/auth</text>
+    </g>
+
+    <!-- Note 3: WARNING type -->
+    <g transform="translate(8,190)">
+      <rect x="0" y="0" width="304" height="68" rx="6" ry="6" fill="rgb(31,31,31)"/>
+      <!-- Left border -->
+      <rect x="0" y="0" width="3" height="68" rx="1.5" ry="0" fill="rgb(247,112,112)"/>
+      <!-- Badge -->
+      <rect x="14" y="8" width="36" height="16" rx="3" ry="3" fill="rgb(44,44,44)"/>
+      <text x="32" y="19" fill="rgb(247,112,112)" font-size="8" font-weight="600" text-anchor="middle">WARN</text>
+      <!-- Source -->
+      <text x="58" y="19" fill="rgb(84,84,84)" font-size="9" font-weight="500">C</text>
+      <!-- Timestamp -->
+      <text x="280" y="19" fill="rgb(69,69,69)" font-size="9" text-anchor="end">14:35</text>
+      <!-- Content -->
+      <text x="14" y="38" fill="rgb(212,212,212)" font-size="12">sessions table has no</text>
+      <text x="14" y="54" fill="rgb(212,212,212)" font-size="12">index on user_id. Will</text>
+      <text x="14" y="54" fill="rgb(135,135,135)" font-size="12" dx="0" dy="14">cause slow queries.</text>
+    </g>
+
+    <!-- Note 4: TODO completed -->
+    <g transform="translate(8,264)" opacity="0.5">
+      <rect x="0" y="0" width="304" height="52" rx="6" ry="6" fill="rgb(31,31,31)"/>
+      <!-- Left border (40% opacity handled by parent) -->
+      <rect x="0" y="0" width="3" height="52" rx="1.5" ry="0" fill="rgb(250,145,61)" opacity="0.8"/>
+      <!-- Checkbox checked -->
+      <rect x="14" y="8" width="14" height="14" rx="2" ry="2" fill="rgb(250,145,61)"/>
+      <!-- Checkmark -->
+      <polyline points="17,15 20,18 25,12" fill="none" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+      <!-- Source -->
+      <text x="36" y="19" fill="rgb(84,84,84)" font-size="9" font-weight="500">U</text>
+      <!-- Timestamp -->
+      <text x="280" y="19" fill="rgb(69,69,69)" font-size="9" text-anchor="end">14:30</text>
+      <!-- Content with strikethrough -->
+      <text x="14" y="40" fill="rgb(212,212,212)" font-size="12" text-decoration="line-through">Update .env.example file</text>
+    </g>
+
+    <!-- Note 5: NOTE type (user) -->
+    <g transform="translate(8,322)">
+      <rect x="0" y="0" width="304" height="52" rx="6" ry="6" fill="rgb(31,31,31)"/>
+      <!-- Left border -->
+      <rect x="0" y="0" width="3" height="52" rx="1.5" ry="0" fill="rgb(100,102,242)"/>
+      <!-- Badge -->
+      <rect x="14" y="8" width="36" height="16" rx="3" ry="3" fill="rgb(44,44,44)"/>
+      <text x="32" y="19" fill="rgb(100,102,242)" font-size="9" font-weight="600" text-anchor="middle">NOTE</text>
+      <!-- Source -->
+      <text x="58" y="19" fill="rgb(84,84,84)" font-size="9" font-weight="500">U</text>
+      <!-- Timestamp -->
+      <text x="280" y="19" fill="rgb(69,69,69)" font-size="9" text-anchor="end">14:36</text>
+      <!-- Content -->
+      <text x="14" y="40" fill="rgb(212,212,212)" font-size="12">Ask about Redis caching</text>
+    </g>
+
+    <!-- Bottom spacer -->
+
+    <!-- Divider before input -->
+    <rect x="0" y="392" width="320" height="1" fill="rgb(44,44,44)"/>
+
+    <!-- Input bar -->
+    <rect x="0" y="393" width="320" height="87" fill="rgb(26,26,26)"/>
+
+    <!-- Type selector buttons -->
+    <g transform="translate(10,402)">
+      <!-- N button (selected) -->
+      <rect x="0" y="0" width="30" height="24" rx="4" ry="4" fill="rgb(64,64,64)"/>
+      <text x="15" y="16" fill="white" font-size="10" font-weight="500" text-anchor="middle">N</text>
+
+      <!-- T button -->
+      <rect x="34" y="0" width="30" height="24" rx="4" ry="4" fill="rgb(44,44,44)"/>
+      <text x="49" y="16" fill="rgb(135,135,135)" font-size="10" font-weight="500" text-anchor="middle">T</text>
+
+      <!-- W button -->
+      <rect x="68" y="0" width="30" height="24" rx="4" ry="4" fill="rgb(44,44,44)"/>
+      <text x="83" y="16" fill="rgb(135,135,135)" font-size="10" font-weight="500" text-anchor="middle">W</text>
+    </g>
+
+    <!-- Text input field -->
+    <g transform="translate(10,434)">
+      <rect x="0" y="0" width="300" height="34" rx="6" ry="6" fill="rgb(31,31,31)" stroke="rgb(51,51,51)" stroke-width="1"/>
+      <text x="12" y="22" fill="rgb(84,84,84)" font-size="12">Add a note...</text>
+      <!-- Cursor -->
+      <rect x="102" y="8" width="1.5" height="18" fill="rgb(100,102,242)" opacity="0.7">
+        <animate attributeName="opacity" values="0.7;0;0.7" dur="1s" repeatCount="indefinite"/>
+      </rect>
+    </g>
+
+    <!-- Window border -->
+    <rect width="320" height="480" rx="10" ry="10" fill="none" stroke="rgb(44,44,44)" stroke-width="1"/>
+  </g>
+</svg>

@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Clause - Floating Note Companion for Claude Code</title>
+  <meta name="description" content="A minimal, ephemeral note-taking companion for Claude Code sessions. Notes, todos, warnings in a floating panel. Open source, macOS native.">
+
+  <meta property="og:title" content="Clause - Floating Note Companion for Claude Code">
+  <meta property="og:description" content="Your Claude Code session's memory, visible. A floating scratchpad that stays on screen while you work.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://github.com/ceaksan/clause">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwindcss.config = {
+      theme: {
+        fontFamily: {
+          mono: ['"JetBrains Mono"', 'ui-monospace', 'SFMono-Regular', 'monospace'],
+        },
+        extend: {
+          colors: {
+            surface: {
+              DEFAULT: '#0a0a0a',
+              raised: '#141414',
+              border: '#1e1e1e',
+            },
+            note: '#3B82F6',
+            todo: '#F59E0B',
+            warn: '#EF4444',
+            txt: {
+              DEFAULT: '#d4d4d4',
+              muted: '#737373',
+              bright: '#fafafa',
+            },
+          },
+        },
+      },
+    }
+  </script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body { background: #0a0a0a; color: #d4d4d4; font-family: 'JetBrains Mono', monospace; }
+
+    @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+    .cursor-blink { animation: blink 1s step-end infinite; }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(16px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .fade-up {
+      opacity: 0;
+      animation: fadeUp 0.5s ease-out forwards;
+    }
+    .fade-up-1 { animation-delay: 0.1s; }
+    .fade-up-2 { animation-delay: 0.2s; }
+    .fade-up-3 { animation-delay: 0.3s; }
+    .fade-up-4 { animation-delay: 0.4s; }
+    .fade-up-5 { animation-delay: 0.5s; }
+
+    .note-card {
+      border-left: 3px solid;
+      transition: transform 0.2s ease-out, border-color 0.2s ease-out;
+    }
+    .note-card:hover { transform: translateX(4px); }
+
+    .tool-row { transition: background-color 0.15s ease; }
+    .tool-row:hover { background-color: #141414; }
+
+    .cta-box {
+      position: relative;
+      overflow: hidden;
+    }
+    .cta-box::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border: 1px solid #3B82F6;
+      opacity: 0.3;
+      transition: opacity 0.2s ease;
+    }
+    .cta-box:hover::before { opacity: 0.6; }
+
+    ::selection { background: #3B82F6; color: #fafafa; }
+  </style>
+</head>
+<body class="font-mono antialiased">
+
+  <!-- Hero -->
+  <section class="min-h-[90vh] flex items-center justify-center px-6 py-20">
+    <div class="max-w-5xl w-full flex flex-col lg:flex-row items-center gap-12 lg:gap-16">
+      <!-- Left: Copy -->
+      <div class="flex-1 max-w-xl">
+        <div class="fade-up fade-up-1">
+          <div class="flex items-center gap-3 mb-8">
+            <div class="w-3 h-3 bg-note"></div>
+            <span class="text-txt-muted text-sm tracking-wide uppercase">Open Source / MIT / macOS Native</span>
+          </div>
+        </div>
+
+        <h1 class="text-3xl md:text-5xl font-bold text-txt-bright leading-tight tracking-tight fade-up fade-up-2">
+          Your Claude Code session's memory, visible.
+        </h1>
+
+        <p class="text-lg md:text-xl text-txt-muted mt-6 leading-relaxed fade-up fade-up-3">
+          A floating scratchpad that stays on screen while you work. Notes, todos, warnings. All ephemeral.
+        </p>
+
+        <div class="mt-10 fade-up fade-up-4">
+          <div class="cta-box bg-surface-raised px-5 py-4 inline-block w-full md:w-auto">
+            <span class="text-txt-muted text-sm">$</span>
+            <span class="text-txt-bright text-sm ml-1" id="clone-text">git clone https://github.com/ceaksan/clause.git</span>
+            <span class="cursor-blink text-note ml-0.5">_</span>
+            <button
+              onclick="navigator.clipboard.writeText('git clone https://github.com/ceaksan/clause.git');this.textContent='copied';setTimeout(()=>this.textContent='copy',1500)"
+              class="ml-4 text-xs text-txt-muted hover:text-note transition-colors"
+            >copy</button>
+          </div>
+        </div>
+
+        <div class="mt-6 flex items-center gap-6 fade-up fade-up-5">
+          <a href="https://github.com/ceaksan/clause" class="text-sm text-txt hover:text-note transition-colors flex items-center gap-2">
+            <svg class="w-4 h-4" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+            View on GitHub
+          </a>
+          <span class="text-txt-muted text-xs">Swift 6 / SwiftUI / MCP</span>
+        </div>
+      </div>
+
+      <!-- Right: App Mockup -->
+      <div class="flex-shrink-0 fade-up fade-up-3 hidden md:block">
+        <div class="relative">
+          <!-- Glow effect behind the panel -->
+          <div class="absolute -inset-8 bg-note/5 blur-3xl rounded-full"></div>
+          <img src="clause-ui.svg" alt="Clause floating panel showing notes, todos, and warnings" width="320" height="480" class="relative drop-shadow-2xl" />
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Problem -->
+  <section class="px-6 py-20">
+    <div class="max-w-2xl mx-auto">
+      <h2 class="text-xs uppercase tracking-widest text-txt-muted mb-8">The problem</h2>
+
+      <p class="text-xl md:text-2xl text-txt-bright leading-relaxed">
+        Context vanishes between tool calls.
+      </p>
+      <p class="text-lg text-txt-muted mt-4 leading-relaxed">
+        You forget what Claude suggested three steps ago. Your terminal scrolls past the important bits. Every interrupted thought costs you minutes of re-reading. Every lost TODO means re-discovering what needs fixing.
+      </p>
+
+      <div class="mt-10 border-l-2 border-surface-border pl-6">
+        <p class="text-txt-muted text-sm italic">
+          Claude told you about a critical edge case in step 2. By step 7, you've scrolled past it. You either re-ask (wasting context) or miss it entirely.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- How It Works -->
+  <section class="px-6 py-20">
+    <div class="max-w-2xl mx-auto">
+      <h2 class="text-xs uppercase tracking-widest text-txt-muted mb-12">How it works</h2>
+
+      <div class="space-y-12">
+        <!-- Step 1 -->
+        <div class="flex gap-6">
+          <div class="flex-shrink-0 w-8 h-8 bg-surface-raised border border-surface-border flex items-center justify-center text-note text-sm font-semibold">1</div>
+          <div>
+            <h3 class="text-txt-bright font-semibold">Claude Code spawns clause-mcp</h3>
+            <p class="text-txt-muted mt-2 text-sm leading-relaxed">Add one line to your MCP config. Claude Code launches the MCP server automatically. Clause.app starts if it isn't running.</p>
+            <div class="mt-4 bg-surface-raised border border-surface-border px-4 py-3">
+              <pre class="text-xs text-txt"><span class="text-txt-muted">// ~/.claude.json</span>
+<span class="text-txt-muted">"mcpServers":</span> {
+  <span class="text-note">"clause"</span>: {
+    <span class="text-txt-muted">"command":</span> <span class="text-txt">"clause-mcp"</span>
+  }
+}</pre>
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 2 -->
+        <div class="flex gap-6">
+          <div class="flex-shrink-0 w-8 h-8 bg-surface-raised border border-surface-border flex items-center justify-center text-note text-sm font-semibold">2</div>
+          <div>
+            <h3 class="text-txt-bright font-semibold">Notes appear in a floating panel</h3>
+            <p class="text-txt-muted mt-2 text-sm leading-relaxed">Claude pushes notes, todos, and warnings in real time. You add your own directly. The panel floats above everything, always visible.</p>
+          </div>
+        </div>
+
+        <!-- Step 3 -->
+        <div class="flex gap-6">
+          <div class="flex-shrink-0 w-8 h-8 bg-surface-raised border border-surface-border flex items-center justify-center text-note text-sm font-semibold">3</div>
+          <div>
+            <h3 class="text-txt-bright font-semibold">Session ends, notes disappear</h3>
+            <p class="text-txt-muted mt-2 text-sm leading-relaxed">Ephemeral by design. No archive, no clutter, no stale notes from last week. Every session starts clean.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Note Types -->
+  <section class="px-6 py-20">
+    <div class="max-w-2xl mx-auto">
+      <h2 class="text-xs uppercase tracking-widest text-txt-muted mb-12">Three note types</h2>
+
+      <div class="space-y-4">
+        <div class="note-card border-note bg-surface-raised px-5 py-4">
+          <div class="flex items-center gap-3 mb-2">
+            <span class="text-xs font-semibold uppercase tracking-wider text-note">note</span>
+          </div>
+          <p class="text-sm text-txt">Context, references, architectural decisions. The things you need to see while coding but don't want to hold in your head.</p>
+        </div>
+
+        <div class="note-card border-todo bg-surface-raised px-5 py-4">
+          <div class="flex items-center gap-3 mb-2">
+            <span class="text-xs font-semibold uppercase tracking-wider text-todo">todo</span>
+          </div>
+          <p class="text-sm text-txt">Action items and next steps. Mark them done with a click. Completed todos get strikethrough and fade out.</p>
+        </div>
+
+        <div class="note-card border-warn bg-surface-raised px-5 py-4">
+          <div class="flex items-center gap-3 mb-2">
+            <span class="text-xs font-semibold uppercase tracking-wider text-warn">warning</span>
+          </div>
+          <p class="text-sm text-txt">Gotchas, blockers, things that will break if you forget. The notes that prevent the "oh no" moment 20 minutes later.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- MCP Tools -->
+  <section class="px-6 py-20">
+    <div class="max-w-2xl mx-auto">
+      <h2 class="text-xs uppercase tracking-widest text-txt-muted mb-8">6 MCP tools</h2>
+      <p class="text-sm text-txt-muted mb-8">Claude uses these automatically. You can also call them from any MCP client.</p>
+
+      <div class="border border-surface-border">
+        <div class="tool-row flex border-b border-surface-border">
+          <div class="w-40 px-4 py-3 text-sm text-note font-medium flex-shrink-0">set_session</div>
+          <div class="px-4 py-3 text-sm text-txt-muted">Set the current session name and context</div>
+        </div>
+        <div class="tool-row flex border-b border-surface-border">
+          <div class="w-40 px-4 py-3 text-sm text-note font-medium flex-shrink-0">add_note</div>
+          <div class="px-4 py-3 text-sm text-txt-muted">Add a note, todo, or warning to the panel</div>
+        </div>
+        <div class="tool-row flex border-b border-surface-border">
+          <div class="w-40 px-4 py-3 text-sm text-note font-medium flex-shrink-0">list_notes</div>
+          <div class="px-4 py-3 text-sm text-txt-muted">List all notes in the current session</div>
+        </div>
+        <div class="tool-row flex border-b border-surface-border">
+          <div class="w-40 px-4 py-3 text-sm text-note font-medium flex-shrink-0">edit_note</div>
+          <div class="px-4 py-3 text-sm text-txt-muted">Update an existing note by ID</div>
+        </div>
+        <div class="tool-row flex border-b border-surface-border">
+          <div class="w-40 px-4 py-3 text-sm text-note font-medium flex-shrink-0">delete_note</div>
+          <div class="px-4 py-3 text-sm text-txt-muted">Remove a note by ID</div>
+        </div>
+        <div class="tool-row flex">
+          <div class="w-40 px-4 py-3 text-sm text-note font-medium flex-shrink-0">clear_notes</div>
+          <div class="px-4 py-3 text-sm text-txt-muted">Clear all notes for the current session</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Architecture -->
+  <section class="px-6 py-20">
+    <div class="max-w-2xl mx-auto">
+      <h2 class="text-xs uppercase tracking-widest text-txt-muted mb-8">Under the hood</h2>
+
+      <div class="bg-surface-raised border border-surface-border px-6 py-5">
+        <pre class="text-sm text-txt leading-relaxed"><span class="text-txt-muted">Claude Code</span>
+    <span class="text-txt-muted">|</span>
+    <span class="text-txt-muted">| stdio (MCP protocol)</span>
+    <span class="text-txt-muted">v</span>
+<span class="text-note">clause-mcp</span> <span class="text-txt-muted">(CLI binary)</span>
+    <span class="text-txt-muted">|</span>
+    <span class="text-txt-muted">| Unix domain socket</span>
+    <span class="text-txt-muted">| ~/.clause/clause.sock</span>
+    <span class="text-txt-muted">v</span>
+<span class="text-note">Clause.app</span> <span class="text-txt-muted">(SwiftUI floating window)</span></pre>
+      </div>
+
+      <div class="mt-6 flex flex-wrap gap-3">
+        <span class="text-xs px-3 py-1.5 border border-surface-border text-txt-muted">Swift 6</span>
+        <span class="text-xs px-3 py-1.5 border border-surface-border text-txt-muted">SwiftUI</span>
+        <span class="text-xs px-3 py-1.5 border border-surface-border text-txt-muted">AppKit</span>
+        <span class="text-xs px-3 py-1.5 border border-surface-border text-txt-muted">Network.framework</span>
+        <span class="text-xs px-3 py-1.5 border border-surface-border text-txt-muted">MCP SDK</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- Roadmap -->
+  <section class="px-6 py-20">
+    <div class="max-w-2xl mx-auto">
+      <h2 class="text-xs uppercase tracking-widest text-txt-muted mb-8">Roadmap</h2>
+
+      <div class="space-y-4">
+        <div class="flex items-start gap-4">
+          <div class="flex-shrink-0 mt-0.5">
+            <svg class="w-4 h-4 text-green-500" viewBox="0 0 16 16" fill="currentColor"><path d="M13.78 4.22a.75.75 0 0 1 0 1.06l-7.25 7.25a.75.75 0 0 1-1.06 0L2.22 9.28a.75.75 0 0 1 1.06-1.06L6 10.94l6.72-6.72a.75.75 0 0 1 1.06 0Z"/></svg>
+          </div>
+          <div>
+            <span class="text-sm text-txt-bright">Milestone 1</span>
+            <span class="text-sm text-txt-muted ml-2">MCP server + floating window + bidirectional IPC</span>
+          </div>
+        </div>
+
+        <div class="flex items-start gap-4">
+          <div class="flex-shrink-0 mt-0.5">
+            <div class="w-4 h-4 border border-surface-border"></div>
+          </div>
+          <div>
+            <span class="text-sm text-txt-bright">Milestone 2</span>
+            <span class="text-sm text-txt-muted ml-2">Global hotkey, multi-session tabs, search, session cleanup</span>
+          </div>
+        </div>
+
+        <div class="flex items-start gap-4">
+          <div class="flex-shrink-0 mt-0.5">
+            <div class="w-4 h-4 border border-surface-border"></div>
+          </div>
+          <div>
+            <span class="text-sm text-txt-bright">Milestone 3</span>
+            <span class="text-sm text-txt-muted ml-2">DMG, Homebrew cask, code signing</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Final CTA -->
+  <section class="px-6 py-24">
+    <div class="max-w-2xl mx-auto text-center">
+      <h2 class="text-2xl md:text-3xl font-bold text-txt-bright">Stop losing context.</h2>
+      <p class="text-txt-muted mt-4">Build from source. One clone, one build, one config line.</p>
+
+      <div class="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
+        <a href="https://github.com/ceaksan/clause" class="cta-box bg-note/10 text-note px-6 py-3 text-sm font-medium hover:bg-note/20 transition-colors flex items-center gap-2">
+          <svg class="w-4 h-4" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+          View on GitHub
+        </a>
+        <a href="https://github.com/ceaksan/clause#installation" class="text-sm text-txt-muted hover:text-txt transition-colors px-6 py-3">
+          Installation guide
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="px-6 py-8">
+    <div class="max-w-2xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
+      <div class="flex items-center gap-2">
+        <div class="w-2 h-2 bg-note"></div>
+        <span class="text-sm text-txt-muted">Clause</span>
+      </div>
+      <div class="flex items-center gap-6 text-xs text-txt-muted">
+        <span>MIT License</span>
+        <a href="https://github.com/ceaksan" class="hover:text-txt transition-colors">@ceaksan</a>
+      </div>
+    </div>
+  </footer>
+
+</body>
+</html>
