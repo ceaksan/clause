@@ -22,38 +22,26 @@
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script>
-    tailwindcss.config = {
-      theme: {
-        fontFamily: {
-          mono: ['"JetBrains Mono"', 'ui-monospace', 'SFMono-Regular', 'monospace'],
-        },
-        extend: {
-          colors: {
-            surface: {
-              DEFAULT: '#0a0a0a',
-              raised: '#141414',
-              border: '#1e1e1e',
-            },
-            note: '#3B82F6',
-            todo: '#F59E0B',
-            warn: '#EF4444',
-            txt: {
-              DEFAULT: '#d4d4d4',
-              muted: '#737373',
-              bright: '#fafafa',
-            },
-          },
-        },
-      },
-    }
-  </script>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
+    :root {
+      --v2-surface-lowest: #070c1f;
+      --v2-surface-card: #0b1324;
+      --v2-surface-low: #151b2d;
+      --v2-surface-high: #23293c;
+      --v2-surface-blur: #0c1324;
+      --v2-border: #0c2656;
+      --v2-primary: #005ded;
+      --v2-secondary: #4edea3;
+      --v2-secondary-container: #1a6b4a;
+      --v2-on-surface: #dce1fb;
+      --v2-on-surface-variant: #c2c6d8;
+      --v2-outline: #8c90a1;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; border-radius: 0 !important; }
     html { scroll-behavior: smooth; }
-    body { background: #0a0a0a; color: #d4d4d4; font-family: 'JetBrains Mono', monospace; }
+    body { background: var(--v2-surface-lowest); color: var(--v2-on-surface-variant); font-family: 'JetBrains Mono', ui-monospace, monospace; }
 
     @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
     .cursor-blink { animation: blink 1s step-end infinite; }
@@ -62,109 +50,107 @@
       from { opacity: 0; transform: translateY(16px); }
       to { opacity: 1; transform: translateY(0); }
     }
-    .fade-up {
-      opacity: 0;
-      animation: fadeUp 0.5s ease-out forwards;
-    }
+    .fade-up { opacity: 0; animation: fadeUp 0.5s ease-out forwards; }
     .fade-up-1 { animation-delay: 0.1s; }
     .fade-up-2 { animation-delay: 0.2s; }
     .fade-up-3 { animation-delay: 0.3s; }
     .fade-up-4 { animation-delay: 0.4s; }
     .fade-up-5 { animation-delay: 0.5s; }
 
-    .note-card {
-      border-left: 3px solid;
-      transition: transform 0.2s ease-out, border-color 0.2s ease-out;
+    .section-log-title {
+      font-family: 'JetBrains Mono', ui-monospace, monospace;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: -0.05em;
     }
-    .note-card:hover { transform: translateX(4px); }
-
-    .tool-row { transition: background-color 0.15s ease; }
-    .tool-row:hover { background-color: #141414; }
-
-    .cta-box {
-      position: relative;
-      overflow: hidden;
+    .section-log-title::after {
+      content: "";
+      display: inline-block;
+      width: 0.6em;
+      height: 0.6em;
+      margin-left: 0.3em;
+      vertical-align: middle;
+      background-color: var(--v2-primary);
+      mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 5v14M5 12l7 7 7-7'/%3E%3C/svg%3E");
+      mask-size: contain;
+      mask-repeat: no-repeat;
+      -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 5v14M5 12l7 7 7-7'/%3E%3C/svg%3E");
+      -webkit-mask-size: contain;
+      -webkit-mask-repeat: no-repeat;
+      transition: opacity 0.3s ease;
+      opacity: 0;
     }
-    .cta-box::before {
-      content: '';
-      position: absolute;
-      inset: 0;
-      border: 1px solid #3B82F6;
-      opacity: 0.3;
-      transition: opacity 0.2s ease;
-    }
-    .cta-box:hover::before { opacity: 0.6; }
+    section:hover .section-log-title::after,
+    div:hover > .section-log-title::after { opacity: 1; }
 
-    ::selection { background: #3B82F6; color: #fafafa; }
+    a { text-decoration: none; color: inherit; }
+    a:hover { color: var(--v2-primary); }
+    ::selection { background: var(--v2-primary); color: #fff; }
   </style>
 </head>
-<body class="font-mono antialiased">
+<body style="font-family: 'JetBrains Mono', ui-monospace, monospace;" class="antialiased">
 
   <!-- Hero -->
-  <section class="min-h-[90vh] flex items-center justify-center px-6 py-20">
-    <div class="max-w-5xl w-full flex flex-col lg:flex-row items-center gap-12 lg:gap-16">
-      <!-- Left: Copy -->
-      <div class="flex-1 max-w-xl">
-        <div class="fade-up fade-up-1">
-          <div class="flex items-center gap-3 mb-8">
-            <div class="w-3 h-3 bg-note"></div>
-            <span class="text-txt-muted text-sm tracking-wide uppercase">Open Source / MIT / macOS Native</span>
-          </div>
+  <section style="min-height: 90vh; display: flex; align-items: center; justify-content: center; padding: 5rem 1.5rem;">
+    <div style="max-width: 64rem; width: 100; display: flex; align-items: center; gap: 4rem;">
+      <div style="flex: 1; max-width: 36rem;">
+        <div class="fade-up fade-up-1" style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 2rem;">
+          <div style="width: 0.75rem; height: 0.75rem; background: var(--v2-primary);"></div>
+          <span style="color: var(--v2-outline); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em;">Open Source / MIT / macOS Native</span>
         </div>
 
-        <h1 class="text-3xl md:text-5xl font-bold text-txt-bright leading-tight tracking-tight fade-up fade-up-2">
+        <h1 class="fade-up fade-up-2" style="font-size: clamp(1.875rem, 4vw, 3rem); font-weight: 800; color: #fff; line-height: 1.1; letter-spacing: -0.03em;">
           Your Claude Code session's memory, visible.
         </h1>
 
-        <p class="text-lg md:text-xl text-txt-muted mt-6 leading-relaxed fade-up fade-up-3">
+        <p class="fade-up fade-up-3" style="font-size: 1.125rem; color: var(--v2-on-surface-variant); margin-top: 1.5rem; line-height: 1.7;">
           A floating scratchpad that stays on screen while you work. Notes, todos, warnings. All ephemeral.
         </p>
 
-        <div class="mt-10 fade-up fade-up-4">
-          <div class="cta-box bg-surface-raised px-5 py-4 inline-block w-full md:w-auto">
-            <span class="text-txt-muted text-sm">$</span>
-            <span class="text-txt-bright text-sm ml-1" id="clone-text">git clone https://github.com/ceaksan/clause.git</span>
-            <span class="cursor-blink text-note ml-0.5">_</span>
+        <div class="fade-up fade-up-4" style="margin-top: 2.5rem;">
+          <div style="background: var(--v2-surface-card); border: 1px solid var(--v2-border); padding: 1rem 1.25rem; display: inline-flex; align-items: center; gap: 0.5rem; width: 100%;">
+            <span style="color: var(--v2-outline); font-size: 0.875rem;">$</span>
+            <span style="color: var(--v2-on-surface); font-size: 0.875rem;" id="clone-text">git clone https://github.com/ceaksan/clause.git</span>
+            <span class="cursor-blink" style="color: var(--v2-primary); margin-left: 0.125rem;">_</span>
             <button
               onclick="navigator.clipboard.writeText('git clone https://github.com/ceaksan/clause.git');this.textContent='copied';setTimeout(()=>this.textContent='copy',1500)"
-              class="ml-4 text-xs text-txt-muted hover:text-note transition-colors"
+              style="margin-left: auto; font-size: 0.75rem; color: var(--v2-outline); background: none; border: none; cursor: pointer; font-family: inherit;"
             >copy</button>
           </div>
         </div>
 
-        <div class="mt-6 flex items-center gap-6 fade-up fade-up-5">
-          <a href="https://github.com/ceaksan/clause" class="text-sm text-txt hover:text-note transition-colors flex items-center gap-2">
-            <svg class="w-4 h-4" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+        <div class="fade-up fade-up-5" style="margin-top: 1.5rem; display: flex; align-items: center; gap: 1.5rem;">
+          <a href="https://github.com/ceaksan/clause" style="font-size: 0.875rem; color: var(--v2-on-surface-variant); display: flex; align-items: center; gap: 0.5rem; transition: color 0.2s;">
+            <svg style="width: 1rem; height: 1rem;" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
             View on GitHub
           </a>
-          <span class="text-txt-muted text-xs">Swift 6 / SwiftUI / MCP</span>
+          <span style="color: var(--v2-outline); font-size: 0.75rem;">Swift 6 / SwiftUI / MCP</span>
         </div>
       </div>
 
-      <!-- Right: App Mockup -->
-      <div class="flex-shrink-0 fade-up fade-up-3 hidden md:block">
-        <div class="relative">
-          <div class="absolute -inset-8 bg-note/5 blur-3xl rounded-full"></div>
-          <img src="clause-ui.svg" alt="Clause floating panel showing notes, todos, and warnings" width="320" height="480" class="relative drop-shadow-2xl" />
+      <!-- App Mockup -->
+      <div class="fade-up fade-up-3" style="flex-shrink: 0;">
+        <div style="position: relative;">
+          <img src="clause-ui.svg" alt="Clause floating panel showing notes, todos, and warnings" width="320" height="480" style="position: relative;" />
         </div>
       </div>
     </div>
   </section>
 
   <!-- Problem -->
-  <section class="px-6 py-20">
-    <div class="max-w-2xl mx-auto">
-      <h2 class="text-xs uppercase tracking-widest text-txt-muted mb-8">The problem</h2>
+  <section style="padding: 5rem 1.5rem;">
+    <div style="max-width: 42rem; margin: 0 auto;">
+      <h2 class="section-log-title" style="font-size: 0.75rem; color: var(--v2-outline); margin-bottom: 2rem; letter-spacing: 0.05em;">THE PROBLEM</h2>
 
-      <p class="text-xl md:text-2xl text-txt-bright leading-relaxed">
+      <p style="font-size: clamp(1.25rem, 2.5vw, 1.5rem); color: #fff; line-height: 1.4; font-weight: 700;">
         Context vanishes between tool calls.
       </p>
-      <p class="text-lg text-txt-muted mt-4 leading-relaxed">
+      <p style="font-size: 1rem; color: var(--v2-on-surface-variant); margin-top: 1rem; line-height: 1.7;">
         You forget what Claude suggested three steps ago. Your terminal scrolls past the important bits. Every interrupted thought costs you minutes of re-reading. Every lost TODO means re-discovering what needs fixing.
       </p>
 
-      <div class="mt-10 border-l-2 border-surface-border pl-6">
-        <p class="text-txt-muted text-sm italic">
+      <div style="margin-top: 2.5rem; border-left: 2px solid var(--v2-border); padding-left: 1.5rem;">
+        <p style="color: var(--v2-outline); font-size: 0.875rem; font-style: italic; line-height: 1.7;">
           Claude told you about a critical edge case in step 2. By step 7, you've scrolled past it. You either re-ask (wasting context) or miss it entirely.
         </p>
       </div>
@@ -172,54 +158,59 @@
   </section>
 
   <!-- Demo Video -->
-  <section class="px-6 py-20">
-    <div class="max-w-4xl mx-auto">
-      <h2 class="text-xs uppercase tracking-widest text-txt-muted mb-8 text-center">See it in action</h2>
-      <div class="relative">
-        <div class="absolute -inset-4 bg-note/5 blur-3xl rounded-2xl"></div>
-        <video src="demo.mp4" autoplay loop muted playsinline class="relative w-full rounded-lg border border-surface-border drop-shadow-2xl"></video>
+  <section style="padding: 5rem 1.5rem;">
+    <div style="max-width: 56rem; margin: 0 auto;">
+      <h2 class="section-log-title" style="font-size: 0.75rem; color: var(--v2-outline); margin-bottom: 2rem; text-align: center; letter-spacing: 0.05em;">SEE IT IN ACTION</h2>
+      <div style="border: 1px solid var(--v2-border);">
+        <video src="demo.mp4" autoplay loop muted playsinline style="width: 100%; display: block;"></video>
       </div>
     </div>
   </section>
 
   <!-- How It Works -->
-  <section class="px-6 py-20">
-    <div class="max-w-2xl mx-auto">
-      <h2 class="text-xs uppercase tracking-widest text-txt-muted mb-12">How it works</h2>
+  <section style="padding: 5rem 1.5rem;">
+    <div style="max-width: 42rem; margin: 0 auto;">
+      <h2 class="section-log-title" style="font-size: 0.75rem; color: var(--v2-outline); margin-bottom: 3rem; letter-spacing: 0.05em;">HOW IT WORKS</h2>
 
-      <div class="space-y-12">
+      <div style="border: 1px solid var(--v2-border);">
         <!-- Step 1 -->
-        <div class="flex gap-6">
-          <div class="flex-shrink-0 w-8 h-8 bg-surface-raised border border-surface-border flex items-center justify-center text-note text-sm font-semibold">1</div>
-          <div>
-            <h3 class="text-txt-bright font-semibold">Claude Code spawns clause-mcp</h3>
-            <p class="text-txt-muted mt-2 text-sm leading-relaxed">Add one line to your MCP config. Claude Code launches the MCP server automatically. Clause.app starts if it isn't running.</p>
-            <div class="mt-4 bg-surface-raised border border-surface-border px-4 py-3">
-              <pre class="text-xs text-txt"><span class="text-txt-muted">// ~/.claude.json</span>
-<span class="text-txt-muted">"mcpServers":</span> {
-  <span class="text-note">"clause"</span>: {
-    <span class="text-txt-muted">"command":</span> <span class="text-txt">"clause-mcp"</span>
+        <div style="padding: 2rem; border-bottom: 1px solid var(--v2-border); background: var(--v2-surface-card);">
+          <div style="display: flex; gap: 1.5rem;">
+            <div style="flex-shrink: 0; width: 2rem; height: 2rem; background: var(--v2-surface-low); border: 1px solid var(--v2-border); display: flex; align-items: center; justify-content: center; color: var(--v2-primary); font-size: 0.875rem; font-weight: 700;">1</div>
+            <div>
+              <h3 style="color: var(--v2-on-surface); font-weight: 700; font-size: 0.875rem;">Claude Code spawns clause-mcp</h3>
+              <p style="color: var(--v2-on-surface-variant); margin-top: 0.5rem; font-size: 0.8125rem; line-height: 1.7;">Add one line to your MCP config. Claude Code launches the MCP server automatically. Clause.app starts if it isn't running.</p>
+              <div style="margin-top: 1rem; background: var(--v2-surface-lowest); border: 1px solid var(--v2-border); padding: 1rem;">
+                <pre style="font-size: 0.75rem; color: var(--v2-on-surface); line-height: 1.8;"><span style="color: var(--v2-outline);">// ~/.claude.json</span>
+<span style="color: var(--v2-outline);">"mcpServers":</span> {
+  <span style="color: var(--v2-primary);">"clause"</span>: {
+    <span style="color: var(--v2-outline);">"command":</span> <span style="color: var(--v2-on-surface);">"clause-mcp"</span>
   }
 }</pre>
+              </div>
             </div>
           </div>
         </div>
 
         <!-- Step 2 -->
-        <div class="flex gap-6">
-          <div class="flex-shrink-0 w-8 h-8 bg-surface-raised border border-surface-border flex items-center justify-center text-note text-sm font-semibold">2</div>
-          <div>
-            <h3 class="text-txt-bright font-semibold">Notes appear in a floating panel</h3>
-            <p class="text-txt-muted mt-2 text-sm leading-relaxed">Claude pushes notes, todos, and warnings in real time. You add your own directly. The panel floats above everything, always visible.</p>
+        <div style="padding: 2rem; border-bottom: 1px solid var(--v2-border); background: var(--v2-surface-low);">
+          <div style="display: flex; gap: 1.5rem;">
+            <div style="flex-shrink: 0; width: 2rem; height: 2rem; background: var(--v2-surface-card); border: 1px solid var(--v2-border); display: flex; align-items: center; justify-content: center; color: var(--v2-primary); font-size: 0.875rem; font-weight: 700;">2</div>
+            <div>
+              <h3 style="color: var(--v2-on-surface); font-weight: 700; font-size: 0.875rem;">Notes appear in a floating panel</h3>
+              <p style="color: var(--v2-on-surface-variant); margin-top: 0.5rem; font-size: 0.8125rem; line-height: 1.7;">Claude pushes notes, todos, and warnings in real time. You add your own directly. The panel floats above everything, always visible.</p>
+            </div>
           </div>
         </div>
 
         <!-- Step 3 -->
-        <div class="flex gap-6">
-          <div class="flex-shrink-0 w-8 h-8 bg-surface-raised border border-surface-border flex items-center justify-center text-note text-sm font-semibold">3</div>
-          <div>
-            <h3 class="text-txt-bright font-semibold">Session ends, notes disappear</h3>
-            <p class="text-txt-muted mt-2 text-sm leading-relaxed">Ephemeral by design. No archive, no clutter, no stale notes from last week. Every session starts clean.</p>
+        <div style="padding: 2rem; background: var(--v2-surface-card);">
+          <div style="display: flex; gap: 1.5rem;">
+            <div style="flex-shrink: 0; width: 2rem; height: 2rem; background: var(--v2-surface-low); border: 1px solid var(--v2-border); display: flex; align-items: center; justify-content: center; color: var(--v2-primary); font-size: 0.875rem; font-weight: 700;">3</div>
+            <div>
+              <h3 style="color: var(--v2-on-surface); font-weight: 700; font-size: 0.875rem;">Session ends, notes disappear</h3>
+              <p style="color: var(--v2-on-surface-variant); margin-top: 0.5rem; font-size: 0.8125rem; line-height: 1.7;">Ephemeral by design. No archive, no clutter, no stale notes from last week. Every session starts clean.</p>
+            </div>
           </div>
         </div>
       </div>
@@ -227,131 +218,119 @@
   </section>
 
   <!-- Note Types -->
-  <section class="px-6 py-20">
-    <div class="max-w-2xl mx-auto">
-      <h2 class="text-xs uppercase tracking-widest text-txt-muted mb-12">Three note types</h2>
+  <section style="padding: 5rem 1.5rem;">
+    <div style="max-width: 42rem; margin: 0 auto;">
+      <h2 class="section-log-title" style="font-size: 0.75rem; color: var(--v2-outline); margin-bottom: 3rem; letter-spacing: 0.05em;">THREE NOTE TYPES</h2>
 
-      <div class="space-y-4">
-        <div class="note-card border-note bg-surface-raised px-5 py-4">
-          <div class="flex items-center gap-3 mb-2">
-            <span class="text-xs font-semibold uppercase tracking-wider text-note">note</span>
-          </div>
-          <p class="text-sm text-txt">Context, references, architectural decisions. The things you need to see while coding but don't want to hold in your head.</p>
+      <div style="border: 1px solid var(--v2-border);">
+        <div style="padding: 1.25rem; border-bottom: 1px solid var(--v2-border); border-left: 3px solid var(--v2-primary); background: var(--v2-surface-card);">
+          <span style="font-size: 0.6875rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--v2-primary);">note</span>
+          <p style="font-size: 0.8125rem; color: var(--v2-on-surface-variant); margin-top: 0.5rem; line-height: 1.7;">Context, references, architectural decisions. The things you need to see while coding but don't want to hold in your head.</p>
         </div>
 
-        <div class="note-card border-todo bg-surface-raised px-5 py-4">
-          <div class="flex items-center gap-3 mb-2">
-            <span class="text-xs font-semibold uppercase tracking-wider text-todo">todo</span>
-          </div>
-          <p class="text-sm text-txt">Action items and next steps. Mark them done with a click. Completed todos get strikethrough and fade out.</p>
+        <div style="padding: 1.25rem; border-bottom: 1px solid var(--v2-border); border-left: 3px solid #F59E0B; background: var(--v2-surface-low);">
+          <span style="font-size: 0.6875rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: #F59E0B;">todo</span>
+          <p style="font-size: 0.8125rem; color: var(--v2-on-surface-variant); margin-top: 0.5rem; line-height: 1.7;">Action items and next steps. Mark them done with a click. Completed todos get strikethrough and fade out.</p>
         </div>
 
-        <div class="note-card border-warn bg-surface-raised px-5 py-4">
-          <div class="flex items-center gap-3 mb-2">
-            <span class="text-xs font-semibold uppercase tracking-wider text-warn">warning</span>
-          </div>
-          <p class="text-sm text-txt">Gotchas, blockers, things that will break if you forget. The notes that prevent the "oh no" moment 20 minutes later.</p>
+        <div style="padding: 1.25rem; border-left: 3px solid #EF4444; background: var(--v2-surface-card);">
+          <span style="font-size: 0.6875rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: #EF4444;">warning</span>
+          <p style="font-size: 0.8125rem; color: var(--v2-on-surface-variant); margin-top: 0.5rem; line-height: 1.7;">Gotchas, blockers, things that will break if you forget. The notes that prevent the "oh no" moment 20 minutes later.</p>
         </div>
       </div>
     </div>
   </section>
 
   <!-- MCP Tools -->
-  <section class="px-6 py-20">
-    <div class="max-w-2xl mx-auto">
-      <h2 class="text-xs uppercase tracking-widest text-txt-muted mb-8">6 MCP tools</h2>
-      <p class="text-sm text-txt-muted mb-8">Claude uses these automatically. You can also call them from any MCP client.</p>
+  <section style="padding: 5rem 1.5rem;">
+    <div style="max-width: 42rem; margin: 0 auto;">
+      <h2 class="section-log-title" style="font-size: 0.75rem; color: var(--v2-outline); margin-bottom: 2rem; letter-spacing: 0.05em;">6 MCP TOOLS</h2>
+      <p style="font-size: 0.8125rem; color: var(--v2-outline); margin-bottom: 2rem;">Claude uses these automatically. You can also call them from any MCP client.</p>
 
-      <div class="border border-surface-border">
-        <div class="tool-row flex border-b border-surface-border">
-          <div class="w-40 px-4 py-3 text-sm text-note font-medium flex-shrink-0">set_session</div>
-          <div class="px-4 py-3 text-sm text-txt-muted">Set the current session name and context</div>
+      <div style="border: 1px solid var(--v2-border);">
+        <div style="display: flex; border-bottom: 1px solid var(--v2-border); background: var(--v2-surface-card);">
+          <div style="width: 10rem; padding: 0.75rem 1rem; font-size: 0.8125rem; color: var(--v2-primary); font-weight: 600; flex-shrink: 0; border-right: 1px solid var(--v2-border);">set_session</div>
+          <div style="padding: 0.75rem 1rem; font-size: 0.8125rem; color: var(--v2-on-surface-variant);">Set the current session name and context</div>
         </div>
-        <div class="tool-row flex border-b border-surface-border">
-          <div class="w-40 px-4 py-3 text-sm text-note font-medium flex-shrink-0">add_note</div>
-          <div class="px-4 py-3 text-sm text-txt-muted">Add a note, todo, or warning to the panel</div>
+        <div style="display: flex; border-bottom: 1px solid var(--v2-border); background: var(--v2-surface-low);">
+          <div style="width: 10rem; padding: 0.75rem 1rem; font-size: 0.8125rem; color: var(--v2-primary); font-weight: 600; flex-shrink: 0; border-right: 1px solid var(--v2-border);">add_note</div>
+          <div style="padding: 0.75rem 1rem; font-size: 0.8125rem; color: var(--v2-on-surface-variant);">Add a note, todo, or warning to the panel</div>
         </div>
-        <div class="tool-row flex border-b border-surface-border">
-          <div class="w-40 px-4 py-3 text-sm text-note font-medium flex-shrink-0">list_notes</div>
-          <div class="px-4 py-3 text-sm text-txt-muted">List all notes in the current session</div>
+        <div style="display: flex; border-bottom: 1px solid var(--v2-border); background: var(--v2-surface-card);">
+          <div style="width: 10rem; padding: 0.75rem 1rem; font-size: 0.8125rem; color: var(--v2-primary); font-weight: 600; flex-shrink: 0; border-right: 1px solid var(--v2-border);">list_notes</div>
+          <div style="padding: 0.75rem 1rem; font-size: 0.8125rem; color: var(--v2-on-surface-variant);">List all notes in the current session</div>
         </div>
-        <div class="tool-row flex border-b border-surface-border">
-          <div class="w-40 px-4 py-3 text-sm text-note font-medium flex-shrink-0">edit_note</div>
-          <div class="px-4 py-3 text-sm text-txt-muted">Update an existing note by ID</div>
+        <div style="display: flex; border-bottom: 1px solid var(--v2-border); background: var(--v2-surface-low);">
+          <div style="width: 10rem; padding: 0.75rem 1rem; font-size: 0.8125rem; color: var(--v2-primary); font-weight: 600; flex-shrink: 0; border-right: 1px solid var(--v2-border);">edit_note</div>
+          <div style="padding: 0.75rem 1rem; font-size: 0.8125rem; color: var(--v2-on-surface-variant);">Update an existing note by ID</div>
         </div>
-        <div class="tool-row flex border-b border-surface-border">
-          <div class="w-40 px-4 py-3 text-sm text-note font-medium flex-shrink-0">delete_note</div>
-          <div class="px-4 py-3 text-sm text-txt-muted">Remove a note by ID</div>
+        <div style="display: flex; border-bottom: 1px solid var(--v2-border); background: var(--v2-surface-card);">
+          <div style="width: 10rem; padding: 0.75rem 1rem; font-size: 0.8125rem; color: var(--v2-primary); font-weight: 600; flex-shrink: 0; border-right: 1px solid var(--v2-border);">delete_note</div>
+          <div style="padding: 0.75rem 1rem; font-size: 0.8125rem; color: var(--v2-on-surface-variant);">Remove a note by ID</div>
         </div>
-        <div class="tool-row flex">
-          <div class="w-40 px-4 py-3 text-sm text-note font-medium flex-shrink-0">clear_notes</div>
-          <div class="px-4 py-3 text-sm text-txt-muted">Clear all notes for the current session</div>
+        <div style="display: flex; background: var(--v2-surface-low);">
+          <div style="width: 10rem; padding: 0.75rem 1rem; font-size: 0.8125rem; color: var(--v2-primary); font-weight: 600; flex-shrink: 0; border-right: 1px solid var(--v2-border);">clear_notes</div>
+          <div style="padding: 0.75rem 1rem; font-size: 0.8125rem; color: var(--v2-on-surface-variant);">Clear all notes for the current session</div>
         </div>
       </div>
     </div>
   </section>
 
   <!-- Architecture -->
-  <section class="px-6 py-20">
-    <div class="max-w-2xl mx-auto">
-      <h2 class="text-xs uppercase tracking-widest text-txt-muted mb-8">Under the hood</h2>
+  <section style="padding: 5rem 1.5rem;">
+    <div style="max-width: 42rem; margin: 0 auto;">
+      <h2 class="section-log-title" style="font-size: 0.75rem; color: var(--v2-outline); margin-bottom: 2rem; letter-spacing: 0.05em;">UNDER THE HOOD</h2>
 
-      <div class="bg-surface-raised border border-surface-border px-6 py-5">
-        <pre class="text-sm text-txt leading-relaxed"><span class="text-txt-muted">Claude Code</span>
-    <span class="text-txt-muted">|</span>
-    <span class="text-txt-muted">| stdio (MCP protocol)</span>
-    <span class="text-txt-muted">v</span>
-<span class="text-note">clause-mcp</span> <span class="text-txt-muted">(CLI binary)</span>
-    <span class="text-txt-muted">|</span>
-    <span class="text-txt-muted">| Unix domain socket</span>
-    <span class="text-txt-muted">| ~/.clause/clause.sock</span>
-    <span class="text-txt-muted">v</span>
-<span class="text-note">Clause.app</span> <span class="text-txt-muted">(SwiftUI floating window)</span></pre>
+      <div style="background: var(--v2-surface-card); border: 1px solid var(--v2-border); padding: 1.5rem;">
+        <pre style="font-size: 0.8125rem; color: var(--v2-on-surface); line-height: 1.8;"><span style="color: var(--v2-outline);">Claude Code</span>
+    <span style="color: var(--v2-outline);">|</span>
+    <span style="color: var(--v2-outline);">| stdio (MCP protocol)</span>
+    <span style="color: var(--v2-outline);">v</span>
+<span style="color: var(--v2-primary);">clause-mcp</span> <span style="color: var(--v2-outline);">(CLI binary)</span>
+    <span style="color: var(--v2-outline);">|</span>
+    <span style="color: var(--v2-outline);">| Unix domain socket</span>
+    <span style="color: var(--v2-outline);">| ~/.clause/clause.sock</span>
+    <span style="color: var(--v2-outline);">v</span>
+<span style="color: var(--v2-primary);">Clause.app</span> <span style="color: var(--v2-outline);">(SwiftUI floating window)</span></pre>
       </div>
 
-      <div class="mt-6 flex flex-wrap gap-3">
-        <span class="text-xs px-3 py-1.5 border border-surface-border text-txt-muted">Swift 6</span>
-        <span class="text-xs px-3 py-1.5 border border-surface-border text-txt-muted">SwiftUI</span>
-        <span class="text-xs px-3 py-1.5 border border-surface-border text-txt-muted">AppKit</span>
-        <span class="text-xs px-3 py-1.5 border border-surface-border text-txt-muted">Network.framework</span>
-        <span class="text-xs px-3 py-1.5 border border-surface-border text-txt-muted">MCP SDK</span>
+      <div style="margin-top: 1.5rem; display: flex; flex-wrap: wrap; gap: 0.75rem;">
+        <span style="font-size: 0.75rem; padding: 0.375rem 0.75rem; border: 1px solid var(--v2-border); color: var(--v2-outline);">Swift 6</span>
+        <span style="font-size: 0.75rem; padding: 0.375rem 0.75rem; border: 1px solid var(--v2-border); color: var(--v2-outline);">SwiftUI</span>
+        <span style="font-size: 0.75rem; padding: 0.375rem 0.75rem; border: 1px solid var(--v2-border); color: var(--v2-outline);">AppKit</span>
+        <span style="font-size: 0.75rem; padding: 0.375rem 0.75rem; border: 1px solid var(--v2-border); color: var(--v2-outline);">Network.framework</span>
+        <span style="font-size: 0.75rem; padding: 0.375rem 0.75rem; border: 1px solid var(--v2-border); color: var(--v2-outline);">MCP SDK</span>
       </div>
     </div>
   </section>
 
   <!-- Roadmap -->
-  <section class="px-6 py-20">
-    <div class="max-w-2xl mx-auto">
-      <h2 class="text-xs uppercase tracking-widest text-txt-muted mb-8">Roadmap</h2>
+  <section style="padding: 5rem 1.5rem;">
+    <div style="max-width: 42rem; margin: 0 auto;">
+      <h2 class="section-log-title" style="font-size: 0.75rem; color: var(--v2-outline); margin-bottom: 2rem; letter-spacing: 0.05em;">ROADMAP</h2>
 
-      <div class="space-y-4">
-        <div class="flex items-start gap-4">
-          <div class="flex-shrink-0 mt-0.5">
-            <svg class="w-4 h-4 text-green-500" viewBox="0 0 16 16" fill="currentColor"><path d="M13.78 4.22a.75.75 0 0 1 0 1.06l-7.25 7.25a.75.75 0 0 1-1.06 0L2.22 9.28a.75.75 0 0 1 1.06-1.06L6 10.94l6.72-6.72a.75.75 0 0 1 1.06 0Z"/></svg>
-          </div>
+      <div style="border: 1px solid var(--v2-border);">
+        <div style="display: flex; align-items: center; gap: 1rem; padding: 1rem 1.25rem; border-bottom: 1px solid var(--v2-border); background: var(--v2-surface-card);">
+          <svg style="width: 1rem; height: 1rem; color: var(--v2-secondary); flex-shrink: 0;" viewBox="0 0 16 16" fill="currentColor"><path d="M13.78 4.22a.75.75 0 0 1 0 1.06l-7.25 7.25a.75.75 0 0 1-1.06 0L2.22 9.28a.75.75 0 0 1 1.06-1.06L6 10.94l6.72-6.72a.75.75 0 0 1 1.06 0Z"/></svg>
           <div>
-            <span class="text-sm text-txt-bright">Milestone 1</span>
-            <span class="text-sm text-txt-muted ml-2">MCP server + floating window + bidirectional IPC</span>
+            <span style="font-size: 0.8125rem; color: var(--v2-on-surface); font-weight: 700;">Milestone 1</span>
+            <span style="font-size: 0.8125rem; color: var(--v2-outline); margin-left: 0.5rem;">MCP server + floating window + bidirectional IPC</span>
           </div>
         </div>
 
-        <div class="flex items-start gap-4">
-          <div class="flex-shrink-0 mt-0.5">
-            <div class="w-4 h-4 border border-surface-border"></div>
-          </div>
+        <div style="display: flex; align-items: center; gap: 1rem; padding: 1rem 1.25rem; border-bottom: 1px solid var(--v2-border); background: var(--v2-surface-low);">
+          <div style="width: 1rem; height: 1rem; border: 1px solid var(--v2-border); flex-shrink: 0;"></div>
           <div>
-            <span class="text-sm text-txt-bright">Milestone 2</span>
-            <span class="text-sm text-txt-muted ml-2">Global hotkey, multi-session tabs, search, session cleanup</span>
+            <span style="font-size: 0.8125rem; color: var(--v2-on-surface); font-weight: 700;">Milestone 2</span>
+            <span style="font-size: 0.8125rem; color: var(--v2-outline); margin-left: 0.5rem;">Global hotkey, multi-session tabs, search, session cleanup</span>
           </div>
         </div>
 
-        <div class="flex items-start gap-4">
-          <div class="flex-shrink-0 mt-0.5">
-            <div class="w-4 h-4 border border-surface-border"></div>
-          </div>
+        <div style="display: flex; align-items: center; gap: 1rem; padding: 1rem 1.25rem; background: var(--v2-surface-card);">
+          <div style="width: 1rem; height: 1rem; border: 1px solid var(--v2-border); flex-shrink: 0;"></div>
           <div>
-            <span class="text-sm text-txt-bright">Milestone 3</span>
-            <span class="text-sm text-txt-muted ml-2">DMG, Homebrew cask, code signing</span>
+            <span style="font-size: 0.8125rem; color: var(--v2-on-surface); font-weight: 700;">Milestone 3</span>
+            <span style="font-size: 0.8125rem; color: var(--v2-outline); margin-left: 0.5rem;">DMG, Homebrew cask, code signing</span>
           </div>
         </div>
       </div>
@@ -359,17 +338,17 @@
   </section>
 
   <!-- Final CTA -->
-  <section class="px-6 py-24">
-    <div class="max-w-2xl mx-auto text-center">
-      <h2 class="text-2xl md:text-3xl font-bold text-txt-bright">Stop losing context.</h2>
-      <p class="text-txt-muted mt-4">Build from source. One clone, one build, one config line.</p>
+  <section style="padding: 6rem 1.5rem;">
+    <div style="max-width: 42rem; margin: 0 auto; text-align: center;">
+      <h2 style="font-size: clamp(1.5rem, 3vw, 1.875rem); font-weight: 800; color: #fff;">Stop losing context.</h2>
+      <p style="color: var(--v2-outline); margin-top: 1rem; font-size: 0.875rem;">Build from source. One clone, one build, one config line.</p>
 
-      <div class="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
-        <a href="https://github.com/ceaksan/clause" class="cta-box bg-note/10 text-note px-6 py-3 text-sm font-medium hover:bg-note/20 transition-colors flex items-center gap-2">
-          <svg class="w-4 h-4" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+      <div style="margin-top: 2.5rem; display: flex; align-items: center; justify-content: center; gap: 1rem; flex-wrap: wrap;">
+        <a href="https://github.com/ceaksan/clause" style="background: var(--v2-primary); color: #fff; padding: 0.75rem 1.5rem; font-size: 0.875rem; font-weight: 700; display: inline-flex; align-items: center; gap: 0.5rem; transition: opacity 0.2s;">
+          <svg style="width: 1rem; height: 1rem;" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
           View on GitHub
         </a>
-        <a href="https://github.com/ceaksan/clause#installation" class="text-sm text-txt-muted hover:text-txt transition-colors px-6 py-3">
+        <a href="https://github.com/ceaksan/clause#installation" style="font-size: 0.875rem; color: var(--v2-outline); padding: 0.75rem 1.5rem; border: 1px solid var(--v2-border); transition: color 0.2s;">
           Installation guide
         </a>
       </div>
@@ -377,17 +356,17 @@
   </section>
 
   <!-- Footer -->
-  <footer class="px-6 py-8">
-    <div class="max-w-2xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
-      <div class="flex items-center gap-2">
-        <div class="w-2 h-2 bg-note"></div>
-        <span class="text-sm text-txt-muted">Clause</span>
+  <footer style="padding: 2rem 1.5rem; border-top: 1px solid var(--v2-border);">
+    <div style="max-width: 42rem; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem;">
+      <div style="display: flex; align-items: center; gap: 0.5rem;">
+        <div style="width: 0.5rem; height: 0.5rem; background: var(--v2-primary);"></div>
+        <span style="font-size: 0.8125rem; color: var(--v2-outline);">Clause</span>
       </div>
-      <div class="flex items-center gap-6 text-xs text-txt-muted">
+      <div style="display: flex; align-items: center; gap: 1.5rem; font-size: 0.75rem; color: var(--v2-outline);">
         <span>MIT License</span>
-        <a href="https://github.com/ceaksan" class="hover:text-txt transition-colors">GitHub</a>
-        <a href="https://x.com/ceaksan" class="hover:text-txt transition-colors">X</a>
-        <a href="https://bsky.app/profile/ceaksan.com" class="hover:text-txt transition-colors">Bluesky</a>
+        <a href="https://github.com/ceaksan" style="transition: color 0.2s;">GitHub</a>
+        <a href="https://x.com/ceaksan" style="transition: color 0.2s;">X</a>
+        <a href="https://bsky.app/profile/ceaksan.com" style="transition: color 0.2s;">Bluesky</a>
       </div>
     </div>
   </footer>
