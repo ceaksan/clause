@@ -8,12 +8,14 @@
 
 ## Build
 - Open Clause.xcodeproj in Xcode
-- Or: xcodebuild -scheme ClauseApp -configuration Debug build
+- Or: xcodebuild -scheme Clause -configuration Debug build
 - Or: xcodebuild -scheme ClauseMCP -configuration Debug build
 
 ## Architecture
 Two-process model: ClauseMCP (CLI, stdio MCP) <-> Unix socket <-> ClauseApp (SwiftUI window)
-See docs/superpowers/specs/2026-03-21-clause-design.md for full spec.
+Current design: docs/superpowers/specs/2026-11-07-clause-herdr-board-design.md (herdr multi-workspace board, ADR-001).
+Original single-session design: docs/superpowers/specs/2026-03-21-clause-design.md (superseded).
+After adding or deleting a Swift file, run `xcodegen generate`; the generated project is committed.
 
 ## Conventions
 - Swift Testing framework (@Test, #expect) for all tests

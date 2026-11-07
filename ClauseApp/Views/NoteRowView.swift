@@ -2,6 +2,9 @@ import SwiftUI
 import ClauseShared
 
 struct NoteRowView: View {
+    static let sentColor = Color(red: 0.98, green: 0.75, blue: 0.14)
+    static let decidedColor = Color(red: 0.29, green: 0.78, blue: 0.47)
+
     let note: Note
     var onToggleCompleted: (() -> Void)?
 
@@ -10,6 +13,7 @@ struct NoteRowView: View {
         case .note: Color(red: 0.39, green: 0.4, blue: 0.95)
         case .todo: Color(red: 0.98, green: 0.57, blue: 0.24)
         case .warning: Color(red: 0.97, green: 0.44, blue: 0.44)
+        case .decision: note.status == .decided ? Self.decidedColor : Self.sentColor
         }
     }
 
@@ -18,6 +22,7 @@ struct NoteRowView: View {
         case .note: "NOTE"
         case .todo: "TODO"
         case .warning: "WARNING"
+        case .decision: note.status == .decided ? "DECIDED" : "SENT"
         }
     }
 
@@ -46,10 +51,6 @@ struct NoteRowView: View {
                             .background(Color(white: 0.17))
                             .cornerRadius(3)
                     }
-
-                    Text(note.source == .claude ? "C" : "U")
-                        .font(.system(size: 10, design: .monospaced))
-                        .foregroundStyle(Color(white: 0.33))
 
                     Spacer()
 

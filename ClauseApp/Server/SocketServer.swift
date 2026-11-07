@@ -207,121 +207,123 @@ final class SocketServer {
         clientBuffers[fd] = Data(data)
     }
 
-    private func handleRequest(_ request: IPCRequest) -> IPCResponse {
-        switch request.action {
-        case "set_session":
-            return handleSetSession(request)
-        case "add_note":
-            return handleAddNote(request)
-        case "list_notes":
-            return handleListNotes(request)
-        case "edit_note":
-            return handleEditNote(request)
-        case "delete_note":
-            return handleDeleteNote(request)
-        case "clear_notes":
-            return handleClearNotes(request)
-        default:
-            return IPCResponse(error: IPCError(code: .invalidParams, message: "Unknown action: \(request.action)"), reqId: request.reqId)
+    func handleRequest(_ request: IPCRequest) -> IPCResponse {
+        guard request.version == ClauseConstants.protocolVersion else {
+            let got = request.version ?? "none"
+            return fail(.versionMismatch, "Expected protocol version \(ClauseConstants.protocolVersion), got \(got)", request)
+        }
+        guard let caller = request.context else {
+            return fail(.invalidParams, "Missing agent context", request)
+        }
+        do {
+            switch request.action {
+            case "add_note":
+                return try handleAddNote(request, caller: caller)
+            case "list_notes":
+                return try handleListNotes(request, caller: caller)
+            case "edit_note":
+                return try handleEditNote(request, caller: caller)
+            case "delete_note":
+                return try handleDeleteNote(request, caller: caller)
+            case "clear_notes":
+                let count = noteStore.clearNotes(caller: caller)
+                return IPCResponse(result: ["cleared": .int(count)], reqId: request.reqId)
+            default:
+                return fail(.invalidParams, "Unknown action: \(request.action)", request)
+            }
+        } catch let error as ParamError {
+            return fail(.invalidParams, error.message, request)
+        } catch {
+            return fail(.internalError, "\(error)", request)
         }
     }
 
-    private func handleSetSession(_ request: IPCRequest) -> IPCResponse {
-        guard let id = request.params["id"]?.stringValue,
-              let directory = request.params["directory"]?.stringValue else {
-            return IPCResponse(error: IPCError(code: .invalidParams, message: "Missing id or directory"), reqId: request.reqId)
-        }
-
-        let version = request.params["version"]?.stringValue ?? ClauseConstants.protocolVersion
-        if version != ClauseConstants.protocolVersion {
-            return IPCResponse(error: IPCError(code: .versionMismatch, message: "Expected protocol version \(ClauseConstants.protocolVersion), got \(version)"), reqId: request.reqId)
-        }
-
-        let pid: Int32 = if case .int(let p) = request.params["pid"] { Int32(p) } else { 0 }
-        let session = Session(id: id, directory: directory, protocolVersion: version, pid: pid)
-        noteStore.setSession(session)
-        return IPCResponse(result: ["ok": .bool(true)], reqId: request.reqId)
+    private struct ParamError: Error {
+        let message: String
     }
 
-    private func handleAddNote(_ request: IPCRequest) -> IPCResponse {
-        guard noteStore.isSessionActive else {
-            return IPCResponse(error: IPCError(code: .sessionNotSet, message: "No active session"), reqId: request.reqId)
-        }
-        guard let text = request.params["text"]?.stringValue else {
-            return IPCResponse(error: IPCError(code: .invalidParams, message: "Missing text"), reqId: request.reqId)
-        }
-        let typeStr = request.params["type"]?.stringValue ?? "note"
-        let type = Note.NoteType(rawValue: typeStr) ?? .note
+    private func fail(_ code: ErrorCode, _ message: String, _ request: IPCRequest) -> IPCResponse {
+        IPCResponse(error: IPCError(code: code, message: message), reqId: request.reqId)
+    }
 
-        let note = noteStore.addNote(text: text, source: .claude, type: type)
+    private func enumParam<T: RawRepresentable>(_ request: IPCRequest, _ key: String) throws -> T? where T.RawValue == String {
+        guard let raw = request.params[key]?.stringValue else { return nil }
+        guard let value = T(rawValue: raw) else { throw ParamError(message: "Invalid \(key): \(raw)") }
+        return value
+    }
+
+    private func idParam(_ request: IPCRequest) throws -> UUID {
+        guard let raw = request.params["id"]?.stringValue, let id = UUID(uuidString: raw) else {
+            throw ParamError(message: "Missing or invalid id")
+        }
+        return id
+    }
+
+    private func requireDecisionForStatus(_ status: DecisionStatus?, type: Note.NoteType) throws {
+        if status != nil && type != .decision {
+            throw ParamError(message: "status is only valid on decision notes")
+        }
+    }
+
+    private func handleAddNote(_ request: IPCRequest, caller: AgentContext) throws -> IPCResponse {
+        guard let text = request.params["text"]?.stringValue else { throw ParamError(message: "Missing text") }
+        let type: Note.NoteType = try enumParam(request, "type") ?? .note
+        let status: DecisionStatus? = try enumParam(request, "status")
+        try requireDecisionForStatus(status, type: type)
+
+        let note = noteStore.addNote(text: text, source: .claude, type: type, status: status, context: caller)
         let ts = ISO8601DateFormatter().string(from: note.timestamp)
         return IPCResponse(result: ["id": .string(note.id.uuidString), "ts": .string(ts)], reqId: request.reqId)
     }
 
-    private func handleListNotes(_ request: IPCRequest) -> IPCResponse {
-        guard noteStore.isSessionActive else {
-            return IPCResponse(error: IPCError(code: .sessionNotSet, message: "No active session"), reqId: request.reqId)
-        }
-        let typeFilter = request.params["type"]?.stringValue.flatMap { Note.NoteType(rawValue: $0) }
-        let sourceFilter = request.params["source"]?.stringValue.flatMap { Note.Source(rawValue: $0) }
-        let notes = noteStore.listNotes(type: typeFilter, source: sourceFilter)
+    private func handleListNotes(_ request: IPCRequest, caller: AgentContext) throws -> IPCResponse {
+        let typeFilter: Note.NoteType? = try enumParam(request, "type")
+        let notes = noteStore.listNotes(caller: caller, type: typeFilter)
 
         let formatter = ISO8601DateFormatter()
         let noteDicts: [[String: IPCValue]] = notes.map { note in
             [
                 "id": .string(note.id.uuidString),
                 "ts": .string(formatter.string(from: note.timestamp)),
-                "source": .string(note.source.rawValue),
                 "type": .string(note.type.rawValue),
+                "status": note.status.map { .string($0.rawValue) } ?? .null,
                 "text": .string(note.text),
                 "completed": .bool(note.completed)
             ]
         }
 
-        let encoder = JSONEncoder()
-        encoder.dateEncodingStrategy = .iso8601
-        if let data = try? encoder.encode(noteDicts), let json = String(data: data, encoding: .utf8) {
-            return IPCResponse(result: ["notes": .string(json)], reqId: request.reqId)
+        guard let data = try? JSONEncoder().encode(noteDicts), let json = String(data: data, encoding: .utf8) else {
+            return IPCResponse(result: ["notes": .string("[]")], reqId: request.reqId)
         }
-        return IPCResponse(result: ["notes": .string("[]")], reqId: request.reqId)
+        return IPCResponse(result: ["notes": .string(json)], reqId: request.reqId)
     }
 
-    private func handleEditNote(_ request: IPCRequest) -> IPCResponse {
-        guard noteStore.isSessionActive else {
-            return IPCResponse(error: IPCError(code: .sessionNotSet, message: "No active session"), reqId: request.reqId)
+    private func handleEditNote(_ request: IPCRequest, caller: AgentContext) throws -> IPCResponse {
+        let id = try idParam(request)
+        let type: Note.NoteType? = try enumParam(request, "type")
+        let status: DecisionStatus? = try enumParam(request, "status")
+        guard let current = noteStore.listNotes(caller: caller).first(where: { $0.id == id }) else {
+            return fail(.notFound, "Note not found", request)
         }
-        guard let idStr = request.params["id"]?.stringValue, let id = UUID(uuidString: idStr) else {
-            return IPCResponse(error: IPCError(code: .invalidParams, message: "Missing or invalid id"), reqId: request.reqId)
-        }
-        let text = request.params["text"]?.stringValue
-        let type = request.params["type"]?.stringValue.flatMap { Note.NoteType(rawValue: $0) }
-        let completed = request.params["completed"]?.boolValue
+        try requireDecisionForStatus(status, type: type ?? current.type)
 
-        if noteStore.editNote(id: id, text: text, type: type, completed: completed) {
-            return IPCResponse(result: ["ok": .bool(true)], reqId: request.reqId)
-        }
-        return IPCResponse(error: IPCError(code: .notFound, message: "Note not found"), reqId: request.reqId)
+        noteStore.editNote(
+            id: id,
+            text: request.params["text"]?.stringValue,
+            type: type,
+            completed: request.params["completed"]?.boolValue,
+            status: status,
+            caller: caller
+        )
+        return IPCResponse(result: ["ok": .bool(true)], reqId: request.reqId)
     }
 
-    private func handleDeleteNote(_ request: IPCRequest) -> IPCResponse {
-        guard noteStore.isSessionActive else {
-            return IPCResponse(error: IPCError(code: .sessionNotSet, message: "No active session"), reqId: request.reqId)
+    private func handleDeleteNote(_ request: IPCRequest, caller: AgentContext) throws -> IPCResponse {
+        let id = try idParam(request)
+        guard noteStore.deleteNote(id: id, caller: caller) else {
+            return fail(.notFound, "Note not found", request)
         }
-        guard let idStr = request.params["id"]?.stringValue, let id = UUID(uuidString: idStr) else {
-            return IPCResponse(error: IPCError(code: .invalidParams, message: "Missing or invalid id"), reqId: request.reqId)
-        }
-        if noteStore.deleteNote(id: id) {
-            return IPCResponse(result: ["ok": .bool(true)], reqId: request.reqId)
-        }
-        return IPCResponse(error: IPCError(code: .notFound, message: "Note not found"), reqId: request.reqId)
-    }
-
-    private func handleClearNotes(_ request: IPCRequest) -> IPCResponse {
-        guard noteStore.isSessionActive else {
-            return IPCResponse(error: IPCError(code: .sessionNotSet, message: "No active session"), reqId: request.reqId)
-        }
-        let count = noteStore.clearNotes()
-        return IPCResponse(result: ["cleared": .int(count)], reqId: request.reqId)
+        return IPCResponse(result: ["ok": .bool(true)], reqId: request.reqId)
     }
 
     private func sendResponse(_ response: IPCResponse, to fd: Int32) {

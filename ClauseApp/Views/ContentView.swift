@@ -13,18 +13,16 @@ struct ContentView: View {
 
             Divider().background(Color(white: 0.17))
 
-            if noteStore.isSessionActive {
-                noteList
+            if noteStore.notes.isEmpty {
+                emptyView
             } else {
-                standbyView
+                board
             }
 
             Divider().background(Color(white: 0.17))
 
-            if noteStore.isSessionActive {
-                InputBar(text: $inputText, selectedType: $selectedType) {
-                    submitNote()
-                }
+            InputBar(text: $inputText, selectedType: $selectedType) {
+                submitNote()
             }
         }
         .background(Color(red: 0.1, green: 0.1, blue: 0.1))
@@ -33,21 +31,18 @@ struct ContentView: View {
 
     private var titleBar: some View {
         HStack {
-            Text(noteStore.session?.directory ?? "Clause")
-                .font(.system(size: 11, design: .monospaced))
+            Text("Clause")
+                .font(.system(size: 11, weight: .semibold, design: .monospaced))
                 .foregroundStyle(Color(white: 0.53))
-                .lineLimit(1)
-                .truncationMode(.middle)
 
             Spacer()
 
             HStack(spacing: 6) {
-                Text("\(noteStore.notes.count) notes")
-                    .font(.system(size: 10))
-                    .foregroundStyle(Color(white: 0.33))
-                Circle()
-                    .fill(noteStore.isSessionActive ? Color.green : Color(white: 0.33))
-                    .frame(width: 6, height: 6)
+                if noteStore.openDecisionCount > 0 {
+                    Text("\(noteStore.openDecisionCount) open")
+                        .font(.system(size: 10))
+                        .foregroundStyle(NoteRowView.sentColor)
+                }
 
                 Button(action: { toggleFloating() }) {
                     Image(systemName: isFloating ? "pin.fill" : "pin.slash")
@@ -63,12 +58,34 @@ struct ContentView: View {
         .background(Color(white: 0.07))
     }
 
-    private var noteList: some View {
+    private var board: some View {
         ScrollView {
-            LazyVStack(spacing: 6) {
-                ForEach(noteStore.notes) { note in
-                    NoteRowView(note: note) {
-                        _ = noteStore.editNote(id: note.id, text: nil, type: nil, completed: !note.completed)
+            LazyVStack(alignment: .leading, spacing: 6) {
+                if !noteStore.userNotes.isEmpty {
+                    sectionHeader("You")
+                    ForEach(noteStore.userNotes) { row($0) }
+                }
+
+                ForEach(noteStore.workspaceGroups) { workspace in
+                    HStack {
+                        sectionHeader(Self.title(workspace.label, workspace.id))
+                        Spacer()
+                        Button(action: { _ = noteStore.clearWorkspace(workspace.id) }) {
+                            Image(systemName: "trash")
+                                .font(.system(size: 10))
+                                .foregroundStyle(Color(white: 0.4))
+                        }
+                        .buttonStyle(.plain)
+                        .help("Clear this workspace")
+                    }
+
+                    ForEach(workspace.panes) { pane in
+                        Text(Self.title(pane.label, pane.id))
+                            .font(.system(size: 10, design: .monospaced))
+                            .foregroundStyle(Color(white: 0.45))
+                            .padding(.leading, 4)
+                            .padding(.top, 2)
+                        ForEach(pane.notes) { row($0) }
                     }
                 }
             }
@@ -76,14 +93,46 @@ struct ContentView: View {
         }
     }
 
-    private var standbyView: some View {
+    private var emptyView: some View {
         VStack {
             Spacer()
-            Text("Waiting for session...")
+            Text("No notes yet")
                 .font(.system(size: 13))
                 .foregroundStyle(Color(white: 0.33))
             Spacer()
         }
+        .frame(maxWidth: .infinity)
+    }
+
+    private func sectionHeader(_ text: String) -> some View {
+        Text(text)
+            .font(.system(size: 11, weight: .semibold, design: .monospaced))
+            .foregroundStyle(Color(white: 0.6))
+            .lineLimit(1)
+            .truncationMode(.middle)
+            .padding(.top, 6)
+    }
+
+    private func row(_ note: Note) -> some View {
+        NoteRowView(note: note) {
+            _ = noteStore.editNote(id: note.id, completed: !note.completed)
+        }
+        .contextMenu {
+            if note.type == .decision {
+                let next: DecisionStatus = note.status == .decided ? .sent : .decided
+                Button(next == .decided ? "Mark decided" : "Mark sent") {
+                    _ = noteStore.editNote(id: note.id, status: next)
+                }
+            }
+            Button("Delete", role: .destructive) {
+                _ = noteStore.deleteNote(id: note.id)
+            }
+        }
+    }
+
+    static func title(_ label: String?, _ id: String) -> String {
+        guard let label, !label.isEmpty else { return id }
+        return "\(label) · \(id)"
     }
 
     private func submitNote() {

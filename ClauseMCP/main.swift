@@ -168,80 +168,66 @@ final class SocketClient: @unchecked Sendable {
 
 // MARK: - Tool Definitions
 
+let noteTypes: Value = .array([.string("note"), .string("todo"), .string("warning"), .string("decision")])
+let decisionStatuses: Value = .array([.string("sent"), .string("decided")])
+
+func schema(_ properties: [String: Value], required: [String] = []) -> Value {
+    var object: [String: Value] = ["type": .string("object"), "properties": .object(properties)]
+    if !required.isEmpty { object["required"] = .array(required.map { .string($0) }) }
+    return .object(object)
+}
+
 let tools: [Tool] = [
     Tool(
-        name: "set_session",
-        description: "Set the active session for the Clause companion window",
-        inputSchema: .object([
-            "type": .string("object"),
-            "properties": .object([
-                "id": .object(["type": .string("string"), "description": .string("Session identifier")]),
-                "directory": .object(["type": .string("string"), "description": .string("Working directory path")])
-            ]),
-            "required": .array([.string("id"), .string("directory")])
-        ])
-    ),
-    Tool(
         name: "add_note",
-        description: "Add a note to the Clause companion window",
-        inputSchema: .object([
-            "type": .string("object"),
-            "properties": .object([
-                "text": .object(["type": .string("string"), "description": .string("Note text content")]),
-                "type": .object(["type": .string("string"), "enum": .array([.string("note"), .string("todo"), .string("warning")]), "description": .string("Note type")])
-            ]),
-            "required": .array([.string("text")])
-        ])
+        description: "Post a note to the user's Clause board. When you send a decision topic to another agent, add a one-line headline with type \"decision\" (status defaults to \"sent\"). Notes are scoped to your herdr pane.",
+        inputSchema: schema([
+            "text": .object(["type": .string("string"), "description": .string("Note text; for decisions a one-line headline")]),
+            "type": .object(["type": .string("string"), "enum": noteTypes, "description": .string("Note type")]),
+            "status": .object(["type": .string("string"), "enum": decisionStatuses, "description": .string("Decision status, decisions only")])
+        ], required: ["text"])
     ),
     Tool(
         name: "list_notes",
-        description: "List notes in the Clause companion window",
-        inputSchema: .object([
-            "type": .string("object"),
-            "properties": .object([
-                "type": .object(["type": .string("string"), "enum": .array([.string("note"), .string("todo"), .string("warning")]), "description": .string("Filter by note type")]),
-                "source": .object(["type": .string("string"), "enum": .array([.string("claude"), .string("user")]), "description": .string("Filter by source")])
-            ])
+        description: "List the notes this pane has posted to the Clause board.",
+        inputSchema: schema([
+            "type": .object(["type": .string("string"), "enum": noteTypes, "description": .string("Filter by note type")])
         ])
     ),
     Tool(
         name: "edit_note",
-        description: "Edit an existing note in the Clause companion window",
-        inputSchema: .object([
-            "type": .string("object"),
-            "properties": .object([
-                "id": .object(["type": .string("string"), "description": .string("Note UUID to edit")]),
-                "text": .object(["type": .string("string"), "description": .string("New text content")]),
-                "type": .object(["type": .string("string"), "enum": .array([.string("note"), .string("todo"), .string("warning")])]),
-                "completed": .object(["type": .string("boolean"), "description": .string("Todo completion status")])
-            ]),
-            "required": .array([.string("id")])
-        ])
+        description: "Edit one of your own Clause notes. Set status to \"decided\" when the answer to your decision topic comes back. Status is only valid on decisions.",
+        inputSchema: schema([
+            "id": .object(["type": .string("string"), "description": .string("Note UUID to edit")]),
+            "text": .object(["type": .string("string"), "description": .string("New text content")]),
+            "type": .object(["type": .string("string"), "enum": noteTypes]),
+            "completed": .object(["type": .string("boolean"), "description": .string("Todo completion status")]),
+            "status": .object(["type": .string("string"), "enum": decisionStatuses, "description": .string("Decision status, decisions only")])
+        ], required: ["id"])
     ),
     Tool(
         name: "delete_note",
-        description: "Delete a note from the Clause companion window",
-        inputSchema: .object([
-            "type": .string("object"),
-            "properties": .object([
-                "id": .object(["type": .string("string"), "description": .string("Note UUID to delete")])
-            ]),
-            "required": .array([.string("id")])
-        ])
+        description: "Delete one of this pane's Clause notes.",
+        inputSchema: schema([
+            "id": .object(["type": .string("string"), "description": .string("Note UUID to delete")])
+        ], required: ["id"])
     ),
     Tool(
         name: "clear_notes",
-        description: "Clear all notes from the Clause companion window",
-        inputSchema: .object([
-            "type": .string("object"),
-            "properties": .object([:])
-        ])
+        description: "Clear all notes this pane has posted to the Clause board.",
+        inputSchema: schema([:])
     )
 ]
 
 // MARK: - Tool Call Handler
 
 let socketClient = SocketClient()
+let environment = ProcessInfo.processInfo.environment
+let baseContext = HerdrContext.baseContext(
+    env: environment,
+    cwd: FileManager.default.currentDirectoryPath,
+    pid: getpid()
+)
 
 func handleToolCall(name: String, arguments: [String: Value]?) async throws -> String {
     log("handleToolCall: \(name)")
@@ -255,12 +241,10 @@ func handleToolCall(name: String, arguments: [String: Value]?) async throws -> S
         }
     }
 
-    if name == "set_session" {
-        params["version"] = .string(ClauseConstants.protocolVersion)
-        params["pid"] = .int(Int(ProcessInfo.processInfo.processIdentifier))
-    }
-
-    let request = IPCRequest(action: name, params: params)
+    let context = name == "add_note"
+        ? HerdrContext.resolve(baseContext, env: environment, run: HerdrContext.runHerdr)
+        : baseContext
+    let request = IPCRequest(action: name, params: params, context: context, version: ClauseConstants.protocolVersion)
     let response = try await socketClient.send(request)
 
     if let error = response.error {
@@ -279,7 +263,7 @@ log("Starting clause-mcp")
 
 let server = Server(
     name: "clause",
-    version: "0.1.0",
+    version: "0.2.0",
     capabilities: .init(tools: .init())
 )
 
@@ -291,9 +275,9 @@ await server.withMethodHandler(ListTools.self) { _ in
 await server.withMethodHandler(CallTool.self) { params in
     do {
         let result = try await handleToolCall(name: params.name, arguments: params.arguments)
-        return CallTool.Result(content: [.text(result)])
+        return CallTool.Result(content: [.text(text: result, annotations: nil, _meta: nil)])
     } catch {
-        return CallTool.Result(content: [.text("Error: \(error.localizedDescription)")], isError: true)
+        return CallTool.Result(content: [.text(text: "Error: \(error.localizedDescription)", annotations: nil, _meta: nil)], isError: true)
     }
 }
 

@@ -2,6 +2,18 @@ import Testing
 import Foundation
 @testable import ClauseShared
 
+private func ctx(_ ws: String = "w1", _ pane: String = "p1") -> AgentContext {
+    AgentContext(workspaceId: ws, paneId: pane, workspaceLabel: "audit", agentLabel: "reviewer", pid: 1)
+}
+
+private func roundTrip<T: Codable>(_ value: T) throws -> T {
+    let encoder = JSONEncoder()
+    encoder.dateEncodingStrategy = .iso8601
+    let decoder = JSONDecoder()
+    decoder.dateDecodingStrategy = .iso8601
+    return try decoder.decode(T.self, from: encoder.encode(value))
+}
+
 @Suite("Note Model")
 struct NoteTests {
     @Test("Note initializes with correct defaults")
@@ -11,45 +23,111 @@ struct NoteTests {
         #expect(note.source == .claude)
         #expect(note.type == .note)
         #expect(note.completed == false)
-        #expect(note.id != UUID())
+        #expect(note.status == nil)
+        #expect(note.workspaceId == nil)
     }
 
     @Test("Note encodes and decodes to JSON")
     func noteCodable() throws {
         let ts = Date(timeIntervalSince1970: 1_700_000_000)
         let note = Note(id: UUID(), timestamp: ts, text: "Test", source: .user, type: .todo)
-        let encoder = JSONEncoder()
-        encoder.dateEncodingStrategy = .iso8601
-        let data = try encoder.encode(note)
-        let decoder = JSONDecoder()
-        decoder.dateDecodingStrategy = .iso8601
-        let decoded = try decoder.decode(Note.self, from: data)
-        #expect(decoded == note)
+        #expect(try roundTrip(note) == note)
     }
 
     @Test("Note types encode as expected strings")
     func noteTypeEncoding() throws {
-        let encoder = JSONEncoder()
-        let data = try encoder.encode(Note.NoteType.warning)
-        let str = String(data: data, encoding: .utf8)
-        #expect(str == "\"warning\"")
+        let data = try JSONEncoder().encode(Note.NoteType.decision)
+        #expect(String(data: data, encoding: .utf8) == "\"decision\"")
+    }
+
+    @Test("Decision defaults to sent and copies context")
+    func decisionDefaults() {
+        let note = Note(text: "Pick DB", source: .claude, type: .decision, context: ctx())
+        #expect(note.status == .sent)
+        #expect(note.workspaceId == "w1")
+        #expect(note.paneId == "p1")
+        #expect(note.workspaceLabel == "audit")
+        #expect(note.agentLabel == "reviewer")
+        #expect(note.decidedAt == nil)
+    }
+
+    @Test("Normalize clears status on non-decisions")
+    func normalizeNonDecision() {
+        let note = Note(text: "x", source: .claude, type: .note, status: .decided, decidedAt: Date())
+        #expect(note.status == nil)
+        #expect(note.decidedAt == nil)
+    }
+
+    @Test("Decided gets decidedAt, sent loses it")
+    func normalizeDecidedAt() {
+        var note = Note(text: "x", source: .claude, type: .decision, status: .decided)
+        #expect(note.decidedAt != nil)
+        note.status = .sent
+        note.normalize()
+        #expect(note.decidedAt == nil)
+    }
+
+    @Test("Already decided note keeps its decidedAt")
+    func normalizeKeepsDecidedAt() {
+        let past = Date(timeIntervalSince1970: 1_700_000_000)
+        var note = Note(text: "x", source: .claude, type: .decision, status: .decided, decidedAt: past)
+        note.normalize()
+        #expect(note.decidedAt == past)
+    }
+
+    @Test("belongs(to:) needs both IDs")
+    func belongsNeedsBothIDs() {
+        let note = Note(text: "x", source: .claude, type: .note, context: ctx("w1", "p1"))
+        #expect(note.belongs(to: ctx("w1", "p1")))
+        #expect(!note.belongs(to: ctx("w2", "p1")))
+        #expect(!note.belongs(to: ctx("w1", "p2")))
+        let userNote = Note(text: "mine", source: .user)
+        #expect(!userNote.belongs(to: ctx()))
+    }
+
+    @Test("Note with new fields round-trips")
+    func noteRoundTrip() throws {
+        let note = Note(
+            timestamp: Date(timeIntervalSince1970: 1_700_000_000),
+            text: "Pick DB", source: .claude, type: .decision, status: .decided,
+            context: ctx(), decidedAt: Date(timeIntervalSince1970: 1_700_000_100)
+        )
+        #expect(try roundTrip(note) == note)
+    }
+
+    @Test("Old note JSON without new fields decodes")
+    func oldNoteJSONDecodes() throws {
+        let json = #"{"id":"6F9619FF-8B86-D011-B42D-00C04FC964FF","timestamp":"2026-03-22T10:00:00Z","source":"claude","type":"todo","text":"x","completed":false}"#
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+        let note = try decoder.decode(Note.self, from: Data(json.utf8))
+        #expect(note.type == .todo)
+        #expect(note.workspaceId == nil)
+        #expect(note.paneId == nil)
+        #expect(note.status == nil)
     }
 }
 
-@Suite("Session Model")
-struct SessionTests {
-    @Test("Session encodes and decodes")
-    func sessionCodable() throws {
-        let session = Session(id: "test-123", directory: "/tmp/project", protocolVersion: "1", pid: 12345)
-        let encoder = JSONEncoder()
-        encoder.dateEncodingStrategy = .iso8601
-        let data = try encoder.encode(session)
-        let decoder = JSONDecoder()
-        decoder.dateDecodingStrategy = .iso8601
-        let decoded = try decoder.decode(Session.self, from: data)
-        #expect(decoded.id == "test-123")
-        #expect(decoded.directory == "/tmp/project")
-        #expect(decoded.protocolVersion == "1")
-        #expect(decoded.pid == 12345)
+@Suite("Protocol")
+struct ProtocolTests {
+    @Test("AgentContext round-trips")
+    func contextRoundTrip() throws {
+        #expect(try roundTrip(ctx()) == ctx())
+    }
+
+    @Test("IPCRequest carries context and version")
+    func requestContextRoundTrip() throws {
+        let request = IPCRequest(action: "add_note", params: ["text": .string("x")], context: ctx(), version: "2")
+        let decoded = try roundTrip(request)
+        #expect(decoded.context == ctx())
+        #expect(decoded.version == "2")
+        #expect(decoded.params["text"] == .string("x"))
+    }
+
+    @Test("Protocol version is 2")
+    func protocolVersion() {
+        #expect(ClauseConstants.protocolVersion == "2")
+        #expect(ClauseConstants.decidedRetentionPerPane == 5)
+        #expect(ClauseConstants.boardFile.lastPathComponent == "board.json")
     }
 }

@@ -3,7 +3,6 @@ import Foundation
 public enum ErrorCode: Int, Codable, Sendable {
     case notFound = -1
     case invalidParams = -2
-    case sessionNotSet = -3
     case internalError = -4
     case versionMismatch = -5
 }
@@ -11,11 +10,21 @@ public enum ErrorCode: Int, Codable, Sendable {
 public struct IPCRequest: Codable, Sendable {
     public let action: String
     public let params: [String: IPCValue]
+    public let context: AgentContext?
+    public let version: String?
     public let reqId: String
 
-    public init(action: String, params: [String: IPCValue] = [:], reqId: String = UUID().uuidString) {
+    public init(
+        action: String,
+        params: [String: IPCValue] = [:],
+        context: AgentContext? = nil,
+        version: String? = nil,
+        reqId: String = UUID().uuidString
+    ) {
         self.action = action
         self.params = params
+        self.context = context
+        self.version = version
         self.reqId = reqId
     }
 }
