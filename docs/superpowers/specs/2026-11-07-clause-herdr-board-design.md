@@ -1,8 +1,7 @@
 # Clause for herdr: multi-workspace observer board
 
 **Date:** 2026-11-07
-**Status:** Approved by user 2026-11-07, except items marked *(proposed)*, which Claude added
-and the user has not discussed explicitly.
+**Status:** Approved by user 2026-11-07; the workspace clear items were confirmed 2026-11-08.
 **Supersedes:** the single-session model of [2026-03-21-clause-design.md](2026-03-21-clause-design.md)
 **ADR:** [ADR-001](../../adr/ADR-001-herdr-multi-workspace-board.md)
 
@@ -129,7 +128,7 @@ These hold after every store write, whoever makes it:
 - Status updates: the pane that wrote the decision marks it `decided` when it gets the
   answer back. The deciding agent does not know the entry ID and does not update it.
 - The UI may change any note (the user owns the board).
-- *(proposed)* The UI can clear a whole workspace's entries, since closed workspaces are
+- The UI can clear a whole workspace's entries, since closed workspaces are
   not detected automatically.
 
 ### Persistence
@@ -159,7 +158,7 @@ to another agent, mark it `decided` when the answer comes back.
 - Sections, top to bottom:
   1. **You**: notes the user typed.
   2. One section per workspace, ordered by latest activity. Header:
-     `workspaceLabel · workspaceId` (ID only if no label), plus *(proposed)* a clear
+     `workspaceLabel · workspaceId` (ID only if no label), plus a clear
      button that removes that workspace's entries.
   3. Inside a workspace, one block per pane. Header: `agentLabel · paneId`.
      Rows: open decisions first, then other notes, then decided decisions (max 5).

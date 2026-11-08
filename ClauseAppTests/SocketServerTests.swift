@@ -139,6 +139,21 @@ struct SocketServerTests {
         #expect(h.store.notes.isEmpty)
     }
 
+    @Test("Non-string type or status and non-bool completed rejected")
+    func wrongParamKindsRejected() {
+        let h = Harness()
+        let boolStatus = h.call("add_note", ["text": .string("x"), "type": .string("decision"), "status": .bool(true)], pane: "p1")
+        #expect(boolStatus.error?.code == ErrorCode.invalidParams.rawValue)
+        let intType = h.call("add_note", ["text": .string("x"), "type": .int(123)], pane: "p1")
+        #expect(intType.error?.code == ErrorCode.invalidParams.rawValue)
+        #expect(h.store.notes.isEmpty)
+        let id = h.add("t", type: "todo", pane: "p1")
+        let stringCompleted = h.call("edit_note", ["id": .string(id), "completed": .string("yes")], pane: "p1")
+        #expect(stringCompleted.error?.code == ErrorCode.invalidParams.rawValue)
+        let nullStatus = h.call("edit_note", ["id": .string(id), "status": .null], pane: "p1")
+        #expect(nullStatus.error == nil)
+    }
+
     @Test("Wrong or missing version rejected")
     func wrongVersionRejected() {
         let h = Harness()

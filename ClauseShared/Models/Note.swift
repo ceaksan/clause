@@ -53,6 +53,7 @@ public struct Note: Identifiable, Codable, Equatable, Sendable {
     }
 
     public mutating func normalize() {
+        if type != .todo { completed = false }
         guard type == .decision else {
             status = nil
             decidedAt = nil

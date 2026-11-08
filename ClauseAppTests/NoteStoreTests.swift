@@ -91,6 +91,18 @@ struct NoteStoreTests {
         #expect(store.openDecisionCount == 1)
     }
 
+    @Test("Only todos stay completed after a type change")
+    func completedClearedOffTodo() {
+        let store = NoteStore(snapshotURL: nil)
+        let p1 = ctx("w1", "p1")
+        let todo = store.addNote(text: "t", source: .claude, type: .todo, context: p1)
+        _ = store.editNote(id: todo.id, completed: true, caller: p1)
+        _ = store.editNote(id: todo.id, type: .decision, caller: p1)
+        #expect(store.notes.first?.completed == false)
+        _ = store.editNote(id: todo.id, completed: true, caller: p1)
+        #expect(store.notes.first?.completed == false)
+    }
+
     @Test("Converting a decided decision to a note clears status")
     func convertDecisionToNote() {
         let store = NoteStore(snapshotURL: nil)

@@ -246,8 +246,24 @@ final class SocketServer {
         IPCResponse(error: IPCError(code: code, message: message), reqId: request.reqId)
     }
 
+    private func stringParam(_ request: IPCRequest, _ key: String) throws -> String? {
+        switch request.params[key] {
+        case nil, .null?: return nil
+        case .string(let raw)?: return raw
+        default: throw ParamError(message: "\(key) must be a string")
+        }
+    }
+
+    private func boolParam(_ request: IPCRequest, _ key: String) throws -> Bool? {
+        switch request.params[key] {
+        case nil, .null?: return nil
+        case .bool(let value)?: return value
+        default: throw ParamError(message: "\(key) must be a boolean")
+        }
+    }
+
     private func enumParam<T: RawRepresentable>(_ request: IPCRequest, _ key: String) throws -> T? where T.RawValue == String {
-        guard let raw = request.params[key]?.stringValue else { return nil }
+        guard let raw = try stringParam(request, key) else { return nil }
         guard let value = T(rawValue: raw) else { throw ParamError(message: "Invalid \(key): \(raw)") }
         return value
     }
@@ -266,7 +282,7 @@ final class SocketServer {
     }
 
     private func handleAddNote(_ request: IPCRequest, caller: AgentContext) throws -> IPCResponse {
-        guard let text = request.params["text"]?.stringValue else { throw ParamError(message: "Missing text") }
+        guard let text = try stringParam(request, "text") else { throw ParamError(message: "Missing text") }
         let type: Note.NoteType = try enumParam(request, "type") ?? .note
         let status: DecisionStatus? = try enumParam(request, "status")
         try requireDecisionForStatus(status, type: type)
@@ -302,6 +318,8 @@ final class SocketServer {
         let id = try idParam(request)
         let type: Note.NoteType? = try enumParam(request, "type")
         let status: DecisionStatus? = try enumParam(request, "status")
+        let text = try stringParam(request, "text")
+        let completed = try boolParam(request, "completed")
         guard let current = noteStore.listNotes(caller: caller).first(where: { $0.id == id }) else {
             return fail(.notFound, "Note not found", request)
         }
@@ -309,9 +327,9 @@ final class SocketServer {
 
         noteStore.editNote(
             id: id,
-            text: request.params["text"]?.stringValue,
+            text: text,
             type: type,
-            completed: request.params["completed"]?.boolValue,
+            completed: completed,
             status: status,
             caller: caller
         )

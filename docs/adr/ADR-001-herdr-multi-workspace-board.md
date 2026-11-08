@@ -30,7 +30,7 @@ Clause becomes a one-way observer board for the user.
 - swift-sdk is pinned by revision to tag 0.12.1 (`a0ae212`). 0.11.0 does not compile with
   Xcode 27.1 (NetworkTransport data race, fixed upstream in 0.12.0), and 0.12.x cannot be
   resolved through a version range because it depends on `swift-docc-plugin` by branch.
-  Pending user confirmation.
+  Confirmed by the user 2026-11-07.
 
 ## Consequences
 
