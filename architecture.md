@@ -32,7 +32,7 @@ swift-sdk is pinned by revision because 0.12.x depends on `swift-docc-plugin` by
 | Testing | Swift Testing framework | @Test macros, #expect assertions |
 | IPC transport | Unix domain socket | ~/.clause/clause.sock, 0o700 dir permissions, protocol version 2 |
 | Board storage | In-memory + JSON snapshot | Debounced write to ~/.clause/board.json |
-| Distribution | Local binary (macOS app bundle + CLI) | No App Store, no notarization required for local use |
+| Distribution | Local app bundle with clause-mcp in Contents/MacOS | No App Store, no notarization required for local use |
 
 ## Module Map
 
@@ -48,6 +48,8 @@ Clause/
 │   │   └── HerdrContext.swift  # env -> AgentContext, herdr label lookup, process runner with timeout
 │   └── IPC/
 │       ├── SocketConstants.swift  # Socket path, protocol version, board file, retention, timeouts
+│       ├── SocketClient.swift     # clause-mcp side: lazy connect, app launch, reconnect after app restart
+│       ├── SocketIO.swift         # writeAll (partial writes, poll on EAGAIN), SO_NOSIGPIPE
 │       └── MessageTypes.swift     # IPCRequest (with context, version), IPCResponse, IPCError, IPCValue, ErrorCode
 ├── ClauseApp/               # macOS app target (SwiftUI + AppKit)
 │   ├── ClauseApp.swift      # @main entry; wires window and socket server at launch
@@ -63,13 +65,15 @@ Clause/
 │   └── Window/
 │       └── FloatingPanel.swift  # NSPanel subclass (unused, see tech debt)
 ├── ClauseMCP/               # CLI tool target (MCP stdio server)
-│   └── main.swift           # Tool registration, AgentContext from env, POSIX socket client
+│   └── main.swift           # Tool registration, AgentContext from env, SocketClient wiring
 ├── ClauseSharedTests/
 │   ├── ModelsTests.swift        # Note invariants, Codable round-trips, old JSON, protocol
-│   └── HerdrContextTests.swift  # Context fallback, label parsing, runner timeout/failure
+│   ├── HerdrContextTests.swift  # Context fallback, label parsing, runner timeout/failure
+│   └── SocketClientTests.swift  # Reconnect, lazy connect with app launch, rapid responses (fake server)
 ├── ClauseAppTests/
 │   ├── NoteStoreTests.swift     # Scoping, retention, invariants, grouping, snapshot
-│   └── SocketServerTests.swift  # Every scoping and validation guarantee at the IPC entry point
+│   ├── SocketServerTests.swift  # Every scoping and validation guarantee at the IPC entry point
+│   └── SocketEndToEndTests.swift # Real socket: 240 KB response, client hang-up, bind failure reported
 └── docs/
     ├── adr/                 # Architecture decision records
     └── superpowers/
@@ -93,7 +97,7 @@ Clause/
 Agent in a herdr pane (HERDR_WORKSPACE_ID, HERDR_PANE_ID in env)
   --stdin/JSON-RPC-->
     clause-mcp
-      --> AgentContext from env (fallback: local:<directory> / pid-<pid>)
+      --> AgentContext from env (fallback: local:<path> / pid-<pid>)
       --> add_note only: herdr workspace get / herdr agent get (2 s timeout each)
       --> IPCRequest {action, params, context, version: "2"}
         --Unix socket (~/.clause/clause.sock)-->
@@ -167,7 +171,7 @@ Retention: each `(workspaceId, paneId)` keeps its 5 most recently decided decisi
 | HERDR_WORKSPACE_ID | Workspace scope, set by herdr in every pane | No |
 | HERDR_PANE_ID | Pane scope, set by herdr in every pane | No |
 
-Outside herdr, clause-mcp uses workspace `local:<directory>`, pane `pid-<pid>` and the basename of its working directory as the workspace label.
+Outside herdr, clause-mcp uses workspace `local:<working directory path>`, pane `pid-<pid>` and the folder name as the workspace label. A restarted session gets a new pane; its old notes stay on the board but are out of its scope.
 
 **File system paths:**
 
@@ -193,8 +197,14 @@ No external services, no API keys, no network access.
 
 | Decision | Reason | Trade-off |
 |----------|--------|-----------|
-| POSIX sockets on both sides | NWListener does not support AF_UNIX server binding | Manual fd and buffer handling in SocketServer.swift and main.swift |
-| In-memory state with debounced JSON snapshot | Simple, fast, the board is ephemeral by design | Up to 10 s of loss on crash |
+| POSIX sockets on both sides | NWListener does not support AF_UNIX server binding | Manual fd and buffer handling in SocketServer.swift and SocketClient.swift |
+| Retry only unwritten requests | A request that reached the app may have been applied | A call in flight while the app quits fails once; the next call reconnects |
+| Waiter registered before the write, on the read queue | A fast response can never arrive before its waiter | All client state lives on one serial queue |
+| App ignores SIGPIPE, sockets set SO_NOSIGPIPE | A CLI that quits mid-response must not kill the app | Write errors are handled as EPIPE and the client is dropped |
+| `add_note` saves the board synchronously | A ref handed to an agent must survive a crash | One small file write per new note; edits stay debounced |
+| clause-mcp embedded in Clause.app | One bundle to install; the MCP path is inside the app | The Clause scheme also builds ClauseMCP |
+| Test host skips the socket server and board file | `xcodebuild test` must not take over the user's live socket or overwrite their board | App wiring is verified by the smoke test, not unit tests |
+| In-memory state with debounced JSON snapshot | Simple, fast, the board is ephemeral by design | Up to 10 s of edits lost on crash; new notes and their refs are saved at once. Save failures show in the window |
 | One board, scoped per `(workspaceId, paneId)` | Many agents in many workspaces at once, no setup call | Pane ID uniqueness across herdr restarts is unverified |
 | Labels resolved in clause-mcp on add_note | Renames appear on the next note; the app never shells out | add_note waits up to about 4 s if herdr hangs |
 | Agents only see their own pane | Clause is the user's board, not an agent channel | Agents cannot coordinate through Clause (intended) |
@@ -212,18 +222,17 @@ No external services, no API keys, no network access.
 - [ ] Agents only post if their instruction files say so (CLAUDE.md / AGENTS.md rule, outside this repo)
 
 **Low priority:**
-- [ ] clause-mcp does not reconnect after Clause.app restarts; the agent session must be restarted
 - [ ] swift-sdk StdioTransport drops unhandled requests when stdin hits EOF; real clients keep stdin open, smoke scripts must too
 - [ ] Legacy ~/.clause/sessions/ directory is left on disk
 - [ ] No graceful socket cleanup on abnormal app termination; stale .sock file can block next launch
-- [ ] main.swift:116 request-timeout Task result is unused (compiler warning)
 
 ## Code Hotspots
 
 | File | Risk | Reason |
 |------|------|--------|
 | ClauseApp/Server/SocketServer.swift | High | IPC validation and scoping; every guarantee is tested here |
-| ClauseMCP/main.swift | High | MCP integration + socket client + identity |
+| ClauseMCP/main.swift | High | MCP integration + identity |
+| ClauseShared/IPC/SocketClient.swift | High | Connection lifecycle, reconnect, no double send |
 | ClauseApp/Store/NoteStore.swift | Medium | Central state, retention, grouping |
 | ClauseShared/IPC/MessageTypes.swift | Medium | Wire format; changes require both targets and a protocol bump |
 | ClauseApp/Views/ContentView.swift | Low | Layout |

@@ -17,7 +17,7 @@ old model, a second agent calling `set_session` replaced the first agent's view.
 Clause becomes a one-way observer board for the user.
 
 - `clause-mcp` derives an `AgentContext` from `HERDR_WORKSPACE_ID` and `HERDR_PANE_ID`
-  (fallback `local:<directory>` / `pid-<pid>` outside herdr; amended 2026-11-08 from a single `local` workspace, which mixed projects under one label), resolves display labels through the
+  (fallback `local:<path>` / `pid-<pid>` outside herdr, keyed by the full working directory; amended 2026-11-08 from a single `local` workspace, which mixed projects under one label, and then from the folder name alone, which merged same-named folders; legacy `local` notes are moved to `local:<folder>` on load), resolves display labels through the
   `herdr` CLI with a 2 s timeout per call, and attaches the context to every IPC request.
   `set_session` is removed; protocol version becomes 2.
 - The app keeps one flat note list. Every agent request is scoped to the caller's
