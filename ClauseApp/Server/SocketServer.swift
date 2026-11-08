@@ -268,11 +268,11 @@ final class SocketServer {
         return value
     }
 
-    private func idParam(_ request: IPCRequest) throws -> UUID {
-        guard let raw = request.params["id"]?.stringValue, let id = UUID(uuidString: raw) else {
-            throw ParamError(message: "Missing or invalid id")
-        }
-        return id
+    private func idParam(_ request: IPCRequest) throws -> UUID? {
+        guard let raw = try stringParam(request, "id") else { throw ParamError(message: "Missing id") }
+        if let id = UUID(uuidString: raw) { return id }
+        guard Note.seq(fromRef: raw) != nil else { throw ParamError(message: "Invalid id: \(raw)") }
+        return noteStore.noteId(forRef: raw)
     }
 
     private func requireDecisionForStatus(_ status: DecisionStatus?, type: Note.NoteType) throws {
@@ -289,7 +289,10 @@ final class SocketServer {
 
         let note = noteStore.addNote(text: text, source: .claude, type: type, status: status, context: caller)
         let ts = ISO8601DateFormatter().string(from: note.timestamp)
-        return IPCResponse(result: ["id": .string(note.id.uuidString), "ts": .string(ts)], reqId: request.reqId)
+        return IPCResponse(
+            result: ["id": .string(note.id.uuidString), "ref": note.ref.map { .string($0) } ?? .null, "ts": .string(ts)],
+            reqId: request.reqId
+        )
     }
 
     private func handleListNotes(_ request: IPCRequest, caller: AgentContext) throws -> IPCResponse {
@@ -300,6 +303,7 @@ final class SocketServer {
         let noteDicts: [[String: IPCValue]] = notes.map { note in
             [
                 "id": .string(note.id.uuidString),
+                "ref": note.ref.map { .string($0) } ?? .null,
                 "ts": .string(formatter.string(from: note.timestamp)),
                 "type": .string(note.type.rawValue),
                 "status": note.status.map { .string($0.rawValue) } ?? .null,
@@ -315,7 +319,7 @@ final class SocketServer {
     }
 
     private func handleEditNote(_ request: IPCRequest, caller: AgentContext) throws -> IPCResponse {
-        let id = try idParam(request)
+        guard let id = try idParam(request) else { return fail(.notFound, "Note not found", request) }
         let type: Note.NoteType? = try enumParam(request, "type")
         let status: DecisionStatus? = try enumParam(request, "status")
         let text = try stringParam(request, "text")
@@ -337,7 +341,7 @@ final class SocketServer {
     }
 
     private func handleDeleteNote(_ request: IPCRequest, caller: AgentContext) throws -> IPCResponse {
-        let id = try idParam(request)
+        guard let id = try idParam(request) else { return fail(.notFound, "Note not found", request) }
         guard noteStore.deleteNote(id: id, caller: caller) else {
             return fail(.notFound, "Note not found", request)
         }

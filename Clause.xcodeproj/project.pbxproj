@@ -12,6 +12,7 @@
 		081FC50F2B6169BD23E3FF29 /* AgentContext.swift in Sources */ = {isa = PBXBuildFile; fileRef = E016E4EDD13EB674C064613A /* AgentContext.swift */; };
 		0B6214FC7F57D0EA2C4676AE /* libClauseShared.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 1C399553432E23CF791F2A47 /* libClauseShared.a */; };
 		202649D6AD3840CBE9CB63CB /* HerdrContextTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 536396B0A2AF1304E517C7F0 /* HerdrContextTests.swift */; };
+		22767DE1618461870B85A594 /* NoteRowViewTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 586C629822D475EE972FDE3A /* NoteRowViewTests.swift */; };
 		42F860E5B3D647E84A4B31D7 /* libClauseShared.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 1C399553432E23CF791F2A47 /* libClauseShared.a */; };
 		44D97E1EBC8E6D8F154EF45B /* NoteRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 138A7CD25F661A758BE70A02 /* NoteRowView.swift */; };
 		48381B58342B35567A1DA76F /* InputBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = C7BB034C8304955109B69E0D /* InputBar.swift */; };
@@ -70,6 +71,7 @@
 		1E679C9171C5DCA7D632CF7D /* ClauseApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClauseApp.swift; sourceTree = "<group>"; };
 		376F1FB5A9554255BA418683 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		536396B0A2AF1304E517C7F0 /* HerdrContextTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HerdrContextTests.swift; sourceTree = "<group>"; };
+		586C629822D475EE972FDE3A /* NoteRowViewTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoteRowViewTests.swift; sourceTree = "<group>"; };
 		68551DBBB873F6E52562C71A /* HerdrContext.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HerdrContext.swift; sourceTree = "<group>"; };
 		6AC6AECC6F2F2F123FB848DD /* Note.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Note.swift; sourceTree = "<group>"; };
 		7C562DBBEEC1CF92397BDFCF /* ClauseAppTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ClauseAppTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -166,6 +168,7 @@
 		60763187CBA11B589545E054 /* ClauseAppTests */ = {
 			isa = PBXGroup;
 			children = (
+				586C629822D475EE972FDE3A /* NoteRowViewTests.swift */,
 				0CD1959E5F356F45E8E42BD2 /* NoteStoreTests.swift */,
 				B08BA20C2A14A446EA12E23F /* SocketServerTests.swift */,
 			);
@@ -416,6 +419,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				22767DE1618461870B85A594 /* NoteRowViewTests.swift in Sources */,
 				B01C80915E0B39E25CF34420 /* NoteStoreTests.swift in Sources */,
 				759F578C74A6F860BFB55D84 /* SocketServerTests.swift in Sources */,
 			);

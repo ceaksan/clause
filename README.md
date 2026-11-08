@@ -31,12 +31,14 @@ Inside herdr, `clause-mcp` reads `HERDR_WORKSPACE_ID` and `HERDR_PANE_ID` and ta
 | Tool          | Description                                                              |
 | ------------- | ------------------------------------------------------------------------ |
 | `add_note`    | Add a note, todo, warning, or decision (`status`: `sent` or `decided`)   |
-| `list_notes`  | List this pane's notes                                                   |
-| `edit_note`   | Update one of this pane's notes, e.g. mark a decision `decided`          |
-| `delete_note` | Remove one of this pane's notes                                          |
+| `list_notes`  | List this pane's notes, each with a short ref such as `D-12`             |
+| `edit_note`   | Update one of this pane's notes by UUID or ref, e.g. mark `D-12` decided |
+| `delete_note` | Remove one of this pane's notes by UUID or ref                           |
 | `clear_notes` | Clear this pane's notes                                                  |
 
 Each pane keeps its 5 most recent decided decisions; older ones drop off the board.
+
+Every note has a ref (`N-3`, `T-4`, `W-8`, `D-12`) that is never reused; click it in the panel to copy it, then ask the agent "what is D-12?". Decisions can also carry a private memo, added and edited from the panel only; agents never see it ([ADR-002](docs/adr/ADR-002-note-refs-and-private-memos.md)).
 
 ## Requirements
 

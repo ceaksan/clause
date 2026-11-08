@@ -180,7 +180,7 @@ func schema(_ properties: [String: Value], required: [String] = []) -> Value {
 let tools: [Tool] = [
     Tool(
         name: "add_note",
-        description: "Post a note to the user's Clause board. When you send a decision topic to another agent, add a one-line headline with type \"decision\" (status defaults to \"sent\"). Notes are scoped to your herdr pane.",
+        description: "Post a note to the user's Clause board. When you send a decision topic to another agent, add a one-line headline with type \"decision\" (status defaults to \"sent\"). Notes are scoped to your herdr pane. Returns the note id and a short ref such as D-17; the user refers to notes by ref.",
         inputSchema: schema([
             "text": .object(["type": .string("string"), "description": .string("Note text; for decisions a one-line headline")]),
             "type": .object(["type": .string("string"), "enum": noteTypes, "description": .string("Note type")]),
@@ -189,7 +189,7 @@ let tools: [Tool] = [
     ),
     Tool(
         name: "list_notes",
-        description: "List the notes this pane has posted to the Clause board.",
+        description: "List the notes this pane has posted to the Clause board. Each note has a ref such as D-17 and its post time (ts). When the user asks about a ref, look it up here.",
         inputSchema: schema([
             "type": .object(["type": .string("string"), "enum": noteTypes, "description": .string("Filter by note type")])
         ])
@@ -198,7 +198,7 @@ let tools: [Tool] = [
         name: "edit_note",
         description: "Edit one of your own Clause notes. Set status to \"decided\" when the answer to your decision topic comes back. Status is only valid on decisions.",
         inputSchema: schema([
-            "id": .object(["type": .string("string"), "description": .string("Note UUID to edit")]),
+            "id": .object(["type": .string("string"), "description": .string("Note UUID or ref such as D-17")]),
             "text": .object(["type": .string("string"), "description": .string("New text content")]),
             "type": .object(["type": .string("string"), "enum": noteTypes]),
             "completed": .object(["type": .string("boolean"), "description": .string("Todo completion status")]),
@@ -209,7 +209,7 @@ let tools: [Tool] = [
         name: "delete_note",
         description: "Delete one of this pane's Clause notes.",
         inputSchema: schema([
-            "id": .object(["type": .string("string"), "description": .string("Note UUID to delete")])
+            "id": .object(["type": .string("string"), "description": .string("Note UUID or ref such as D-17")])
         ], required: ["id"])
     ),
     Tool(

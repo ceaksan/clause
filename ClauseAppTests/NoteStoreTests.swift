@@ -231,6 +231,66 @@ struct NoteStoreTests {
         #expect(!kept.contains { $0.text == "d0" })
     }
 
+    @Test("Refs are sequential across panes and user notes")
+    func refsSequential() {
+        let store = NoteStore(snapshotURL: nil)
+        let a = store.addNote(text: "a", source: .claude, type: .decision, context: ctx("w1", "p1"))
+        let b = store.addNote(text: "b", source: .claude, context: ctx("w2", "p1"))
+        let c = store.addNote(text: "c", source: .user, type: .todo)
+        #expect([a.ref, b.ref, c.ref] == ["D-1", "N-2", "T-3"])
+    }
+
+    @Test("Ref number is never reused after delete and reload")
+    func refNotReused() throws {
+        let dir = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        let url = dir.appendingPathComponent("board.json")
+        defer { try? FileManager.default.removeItem(at: dir) }
+        let store = NoteStore(snapshotURL: url)
+        store.addNote(text: "a", source: .user)
+        let last = store.addNote(text: "b", source: .user)
+        _ = store.deleteNote(id: last.id)
+        store.flushSync()
+        let reloaded = NoteStore(snapshotURL: url)
+        #expect(reloaded.addNote(text: "c", source: .user).seq == 3)
+    }
+
+    @Test("Legacy array board loads and gets refs in age order")
+    func legacyBoardGetsRefs() throws {
+        let dir = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        let url = dir.appendingPathComponent("board.json")
+        defer { try? FileManager.default.removeItem(at: dir) }
+        try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        let older = Note(timestamp: Date(timeIntervalSince1970: 1_700_000_000), text: "older", source: .user)
+        let newer = Note(timestamp: Date(timeIntervalSince1970: 1_700_000_100), text: "newer", source: .user)
+        try JSONEncoder().encode([newer, older]).write(to: url)
+        let store = NoteStore(snapshotURL: url)
+        #expect(store.notes.first { $0.text == "older" }?.seq == 1)
+        #expect(store.notes.first { $0.text == "newer" }?.seq == 2)
+        #expect(store.addNote(text: "next", source: .user).seq == 3)
+    }
+
+    @Test("Memo is set, trimmed, capped and cleared when empty")
+    func memoLifecycle() {
+        let store = NoteStore(snapshotURL: nil)
+        let decision = store.addNote(text: "d", source: .claude, type: .decision, context: ctx("w1", "p1"))
+        store.setMemo(id: decision.id, "  ask about rollback  ")
+        #expect(store.notes.first?.memo == "ask about rollback")
+        store.setMemo(id: decision.id, String(repeating: "x", count: 3000))
+        #expect(store.notes.first?.memo?.count == ClauseConstants.maxMemoLength)
+        store.setMemo(id: decision.id, "   ")
+        #expect(store.notes.first?.memo == nil)
+    }
+
+    @Test("Agent edits leave the memo alone")
+    func agentEditKeepsMemo() {
+        let store = NoteStore(snapshotURL: nil)
+        let p1 = ctx("w1", "p1")
+        let decision = store.addNote(text: "d", source: .claude, type: .decision, context: p1)
+        store.setMemo(id: decision.id, "mine")
+        _ = store.editNote(id: decision.id, text: "d2", status: .decided, caller: p1)
+        #expect(store.notes.first?.memo == "mine")
+    }
+
     @Test("Note text truncated at 4096 chars")
     func textTruncation() {
         let store = NoteStore(snapshotURL: nil)

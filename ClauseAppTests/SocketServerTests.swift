@@ -47,6 +47,46 @@ struct SocketServerTests {
         #expect(h.store.notes.first?.text == "theirs")
     }
 
+    @Test("add_note and list_notes report the ref")
+    func refReported() throws {
+        let h = Harness()
+        let added = h.call("add_note", ["text": .string("pick db"), "type": .string("decision")], pane: "p1")
+        #expect(added.result?["ref"] == .string("D-1"))
+        let json = try #require(h.call("list_notes", pane: "p1").result?["notes"]?.stringValue)
+        let rows = try #require(try JSONSerialization.jsonObject(with: Data(json.utf8)) as? [[String: Any]])
+        #expect(rows.first?["ref"] as? String == "D-1")
+    }
+
+    @Test("edit_note and delete_note accept a ref, scoped to the pane")
+    func editByRef() {
+        let h = Harness()
+        _ = h.add("pick db", type: "decision", pane: "p1")
+        _ = h.add("theirs", type: "decision", pane: "p2")
+        let edited = h.call("edit_note", ["id": .string("D-1"), "status": .string("decided")], pane: "p1")
+        #expect(edited.error == nil)
+        #expect(h.store.notes.first { $0.seq == 1 }?.status == .decided)
+        let crossEdit = h.call("edit_note", ["id": .string("D-2"), "text": .string("hijack")], pane: "p1")
+        #expect(crossEdit.error?.code == ErrorCode.notFound.rawValue)
+        let crossDelete = h.call("delete_note", ["id": .string("2")], pane: "p1")
+        #expect(crossDelete.error?.code == ErrorCode.notFound.rawValue)
+        #expect(h.store.notes.first { $0.seq == 2 }?.text == "theirs")
+        let deleted = h.call("delete_note", ["id": .string("d1")], pane: "p1")
+        #expect(deleted.error == nil)
+        #expect(h.store.notes.count == 1)
+    }
+
+    @Test("Memo is private to the user: not listed, not settable by agents")
+    func memoPrivate() throws {
+        let h = Harness()
+        let id = h.add("pick db", type: "decision", pane: "p1")
+        let uuid = try #require(UUID(uuidString: id))
+        h.store.setMemo(id: uuid, "my private thought")
+        let json = try #require(h.call("list_notes", pane: "p1").result?["notes"]?.stringValue)
+        #expect(!json.contains("my private thought"))
+        _ = h.call("edit_note", ["id": .string(id), "memo": .string("agent wrote")], pane: "p1")
+        #expect(h.store.notes.first?.memo == "my private thought")
+    }
+
     @Test("Cross-pane delete rejected at entry point")
     func crossPaneDeleteRejected() {
         let h = Harness()

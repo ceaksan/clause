@@ -127,10 +127,10 @@ clear_notes()                                        # This pane's notes only
 
 | Tool | Key Parameters | Returns |
 |------|---------------|---------|
-| add_note | text (max 4096), type: note/todo/warning/decision, status: sent/decided (decisions only) | id, ts |
-| list_notes | type? | notes JSON (id, ts, type, status, text, completed) |
-| edit_note | id, text?, type?, completed?, status? | ok, or notFound for other panes' notes |
-| delete_note | id | ok, or notFound |
+| add_note | text (max 4096), type: note/todo/warning/decision, status: sent/decided (decisions only) | id, ref, ts |
+| list_notes | type? | notes JSON (id, ref, ts, type, status, text, completed); memo is never included |
+| edit_note | id (UUID or ref), text?, type?, completed?, status? | ok, or notFound for other panes' notes |
+| delete_note | id (UUID or ref) | ok, or notFound |
 | clear_notes | none | cleared count |
 
 Errors: `invalidParams` for unknown type/status, status on a non-decision, missing context, unknown action; `versionMismatch` for any version other than "2".
@@ -151,6 +151,8 @@ Errors: `invalidParams` for unknown type/status, status on a non-decision, missi
 | workspaceLabel, agentLabel | String? | Display only; nil when herdr lookup failed |
 | status | enum: sent, decided? | Decisions only |
 | decidedAt | Date? | Set exactly when status is decided |
+| seq | Int? | Board-wide number from the persisted counter, never reused; `ref` = type prefix + seq (`D-12`) |
+| memo | String? | User's private note, max 1000 chars; UI only, never sent to agents |
 
 Invariants (enforced by `Note.normalize()` after every write): a decision always has a status (default sent); non-decisions have no status and no decidedAt; decidedAt is non-nil exactly when status is decided.
 
@@ -173,7 +175,7 @@ Outside herdr, clause-mcp uses workspace `local`, pane `pid-<pid>` and the basen
 |------|---------|
 | ~/.clause/ | App data directory, created with 0o700 permissions |
 | ~/.clause/clause.sock | Unix domain socket; created by ClauseApp on launch |
-| ~/.clause/board.json | Debounced board snapshot |
+| ~/.clause/board.json | Debounced board snapshot: `{ nextSeq, notes }` (legacy array still loads) |
 | ~/.clause/sessions/ | Legacy per-session files from protocol 1; no longer read or written |
 
 No external services, no API keys, no network access.

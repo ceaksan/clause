@@ -8,6 +8,7 @@ public enum ClauseConstants {
     public static let decidedRetentionPerPane = 5
     public static let herdrTimeoutSeconds: TimeInterval = 2
     public static let maxNoteLength = 4096
+    public static let maxMemoLength = 1000
     public static let requestTimeoutSeconds: TimeInterval = 30
 
     public static var baseDirectory: URL {

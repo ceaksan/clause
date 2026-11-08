@@ -18,6 +18,7 @@ final class NoteStore {
     }
 
     private(set) var notes: [Note] = []
+    private var nextSeq = 1
     private let snapshotURL: URL?
     private var saveTask: Task<Void, Never>?
     private var periodicSaveTask: Task<Void, Never>?
@@ -38,10 +39,17 @@ final class NoteStore {
         status: DecisionStatus? = nil,
         context: AgentContext? = nil
     ) -> Note {
-        let note = Note(text: text, source: source, type: type, status: status, context: context)
+        var note = Note(text: text, source: source, type: type, status: status, context: context)
+        note.seq = nextSeq
+        nextSeq += 1
         notes.insert(note, at: 0)
         didWrite()
         return note
+    }
+
+    func noteId(forRef ref: String) -> UUID? {
+        guard let seq = Note.seq(fromRef: ref) else { return nil }
+        return notes.first { $0.seq == seq }?.id
     }
 
     func listNotes(caller: AgentContext?, type: Note.NoteType? = nil) -> [Note] {
@@ -83,6 +91,13 @@ final class NoteStore {
 
     func clearWorkspace(_ workspaceId: String) -> Int {
         removeAll { $0.workspaceId == workspaceId }
+    }
+
+    func setMemo(id: UUID, _ memo: String) {
+        guard let index = index(of: id, caller: nil) else { return }
+        let trimmed = memo.trimmingCharacters(in: .whitespacesAndNewlines)
+        notes[index].memo = trimmed.isEmpty ? nil : String(trimmed.prefix(ClauseConstants.maxMemoLength))
+        scheduleSave()
     }
 
     // MARK: - Views
@@ -206,16 +221,32 @@ final class NoteStore {
             )
             let encoder = JSONEncoder()
             encoder.outputFormatting = .prettyPrinted
-            try encoder.encode(notes).write(to: snapshotURL, options: .atomic)
+            try encoder.encode(BoardSnapshot(nextSeq: nextSeq, notes: notes)).write(to: snapshotURL, options: .atomic)
         } catch {
             print("NoteStore save error: \(error)")
         }
     }
 
+    private struct BoardSnapshot: Codable {
+        let nextSeq: Int
+        let notes: [Note]
+    }
+
     private func loadFromDisk() {
         guard let snapshotURL, FileManager.default.fileExists(atPath: snapshotURL.path) else { return }
         do {
-            notes = try JSONDecoder().decode([Note].self, from: Data(contentsOf: snapshotURL))
+            let data = try Data(contentsOf: snapshotURL)
+            if let snapshot = try? JSONDecoder().decode(BoardSnapshot.self, from: data) {
+                notes = snapshot.notes
+                nextSeq = snapshot.nextSeq
+            } else {
+                notes = try JSONDecoder().decode([Note].self, from: data)
+            }
+            nextSeq = max(nextSeq, (notes.compactMap(\.seq).max() ?? 0) + 1)
+            for index in notes.indices.sorted(by: { notes[$0].timestamp < notes[$1].timestamp }) where notes[index].seq == nil {
+                notes[index].seq = nextSeq
+                nextSeq += 1
+            }
             for index in notes.indices { notes[index].normalize() }
             pruneDecided()
         } catch {

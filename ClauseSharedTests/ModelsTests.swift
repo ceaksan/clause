@@ -105,6 +105,33 @@ struct NoteTests {
         #expect(note.workspaceId == nil)
         #expect(note.paneId == nil)
         #expect(note.status == nil)
+        #expect(note.seq == nil)
+        #expect(note.ref == nil)
+    }
+
+    @Test("Ref prefix follows the current type, number stays")
+    func refFollowsType() {
+        var note = Note(text: "x", source: .claude, type: .note)
+        note.seq = 17
+        #expect(note.ref == "N-17")
+        note.type = .todo
+        #expect(note.ref == "T-17")
+        note.type = .warning
+        #expect(note.ref == "W-17")
+        note.type = .decision
+        #expect(note.ref == "D-17")
+    }
+
+    @Test("Refs parse with or without prefix and dash")
+    func refParsing() {
+        #expect(Note.seq(fromRef: "D-17") == 17)
+        #expect(Note.seq(fromRef: "d17") == 17)
+        #expect(Note.seq(fromRef: "17") == 17)
+        #expect(Note.seq(fromRef: " N-3 ") == 3)
+        #expect(Note.seq(fromRef: "D-") == nil)
+        #expect(Note.seq(fromRef: "X-1") == nil)
+        #expect(Note.seq(fromRef: "D-0") == nil)
+        #expect(Note.seq(fromRef: "6F9619FF-8B86-D011-B42D-00C04FC964FF") == nil)
     }
 }
 

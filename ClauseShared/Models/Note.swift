@@ -17,13 +17,40 @@ public struct Note: Identifiable, Codable, Equatable, Sendable {
     public var agentLabel: String?
     public var status: DecisionStatus?
     public var decidedAt: Date?
+    public var seq: Int?
+    public var memo: String?
 
     public enum Source: String, Codable, Sendable {
         case claude, user
     }
 
-    public enum NoteType: String, Codable, Sendable {
+    public enum NoteType: String, Codable, Sendable, CaseIterable {
         case note, todo, warning, decision
+
+        public var refPrefix: String {
+            switch self {
+            case .note: "N"
+            case .todo: "T"
+            case .warning: "W"
+            case .decision: "D"
+            }
+        }
+    }
+
+    public var ref: String? {
+        seq.map { "\(type.refPrefix)-\($0)" }
+    }
+
+    public static func seq(fromRef ref: String) -> Int? {
+        var body = Substring(ref.trimmingCharacters(in: .whitespaces).uppercased())
+        if let first = body.first, first.isLetter {
+            guard NoteType.allCases.contains(where: { $0.refPrefix == String(first) }) else { return nil }
+            body = body.dropFirst()
+            if body.first == "-" { body = body.dropFirst() }
+        }
+        guard !body.isEmpty, body.allSatisfy(\.isASCII), body.allSatisfy(\.isNumber),
+              let number = Int(body), number > 0 else { return nil }
+        return number
     }
 
     public init(
