@@ -8,6 +8,8 @@ private final class FakeServer: @unchecked Sendable {
     private let generation: Int
     private var listenFd: Int32 = -1
     private var clientFds: [Int32] = []
+    private var accepted = 0
+    var acceptedConnections: Int { lock.withLock { accepted } }
     private let lock = NSLock()
 
     init(path: String, generation: Int) throws {
@@ -39,7 +41,7 @@ private final class FakeServer: @unchecked Sendable {
         while true {
             let client = accept(listenFd, nil, nil)
             guard client >= 0 else { return }
-            lock.withLock { clientFds.append(client) }
+            lock.withLock { clientFds.append(client); accepted += 1 }
             Thread { [self] in serve(client) }.start()
         }
     }
@@ -110,6 +112,34 @@ struct SocketClientTests {
             if (try? await client.send(IPCRequest(action: "list_notes")))?.result?["server"] == .int(3) { answered += 1 }
         }
         #expect(answered == 300)
+    }
+
+    @Test("Parallel calls while the app starts share one connection and all get answers")
+    func parallelCallsShareOneConnection() async throws {
+        let path = tempSocketPath()
+        let started = Locked<FakeServer?>(nil)
+        let launches = Locked(0)
+        let client = SocketClient(
+            socketPath: path,
+            launchApp: {
+                launches.set(launches.get() + 1)
+                if started.get() == nil { started.set(try FakeServer(path: path, generation: 5)) }
+            },
+            requestTimeout: 2,
+            launchTimeout: 2
+        )
+        defer { started.get()?.stop() }
+        let answered = await withTaskGroup(of: Bool.self) { group in
+            for _ in 0..<10 {
+                group.addTask {
+                    (try? await client.send(IPCRequest(action: "list_notes")))?.result?["server"] == .int(5)
+                }
+            }
+            return await group.reduce(0) { $0 + ($1 ? 1 : 0) }
+        }
+        #expect(answered == 10)
+        #expect(launches.get() == 1)
+        #expect(started.get()?.acceptedConnections == 1)
     }
 
     @Test("First call connects lazily and launches the app when nothing listens")

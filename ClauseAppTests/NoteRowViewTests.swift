@@ -3,6 +3,7 @@ import Foundation
 @testable import Clause
 
 @Suite("NoteRowView")
+@MainActor
 struct NoteRowViewTests {
     private let calendar = Calendar(identifier: .gregorian)
     private let now = Date(timeIntervalSince1970: 1_794_200_000)

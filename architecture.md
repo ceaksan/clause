@@ -73,7 +73,7 @@ Clause/
 ├── ClauseAppTests/
 │   ├── NoteStoreTests.swift     # Scoping, retention, invariants, grouping, snapshot
 │   ├── SocketServerTests.swift  # Every scoping and validation guarantee at the IPC entry point
-│   └── SocketEndToEndTests.swift # Real socket: 240 KB response, client hang-up, bind failure reported
+│   └── SocketEndToEndTests.swift # clause-mcp over stdio to the app; real socket: 240 KB response, hang-up, stalled reader, bind failure
 └── docs/
     ├── adr/                 # Architecture decision records
     └── superpowers/
@@ -201,7 +201,9 @@ No external services, no API keys, no network access.
 | Retry only unwritten requests | A request that reached the app may have been applied | A call in flight while the app quits fails once; the next call reconnects |
 | Waiter registered before the write, on the read queue | A fast response can never arrive before its waiter | All client state lives on one serial queue |
 | App ignores SIGPIPE, sockets set SO_NOSIGPIPE | A CLI that quits mid-response must not kill the app | Write errors are handled as EPIPE and the client is dropped |
-| `add_note` saves the board synchronously | A ref handed to an agent must survive a crash | One small file write per new note; edits stay debounced |
+| Server writes on a serial queue per client | A client that stops reading must not freeze the UI or other agents | The fd is closed on the same queue, after pending writes |
+| One shared connect attempt in SocketClient | Parallel tool calls during app start must not replace each other's connection | Callers wait on the same attempt; the app is launched once |
+| Agent `add_note` succeeds only after the board is on disk | A ref handed to an agent must survive a crash | One small file write per new note; on a failed save the agent gets `internalError` and no ref. User notes stay on the board with the error bar |
 | clause-mcp embedded in Clause.app | One bundle to install; the MCP path is inside the app | The Clause scheme also builds ClauseMCP |
 | Test host skips the socket server and board file | `xcodebuild test` must not take over the user's live socket or overwrite their board | App wiring is verified by the smoke test, not unit tests |
 | In-memory state with debounced JSON snapshot | Simple, fast, the board is ephemeral by design | Up to 10 s of edits lost on crash; new notes and their refs are saved at once. Save failures show in the window |

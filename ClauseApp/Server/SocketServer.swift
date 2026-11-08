@@ -15,6 +15,9 @@ final class SocketServer {
     private var acceptSource: DispatchSourceRead?
     private var clientSources: [Int32: DispatchSourceRead] = [:]
     private var clientBuffers: [Int32: Data] = [:]
+    /// One serial queue per client: writes leave the main actor, keep their order, and the
+    /// fd is closed on the same queue, so it is never closed under a pending write.
+    private var clientWriteQueues: [Int32: DispatchQueue] = [:]
     private let noteStore: NoteStore
 
     init(noteStore: NoteStore, socketPath: String = ClauseConstants.socketPath) {
@@ -30,7 +33,7 @@ final class SocketServer {
         // Create socket
         serverFd = socket(AF_UNIX, SOCK_STREAM, 0)
         guard serverFd >= 0 else {
-            fail("Failed to create socket (errno \(errno))")
+            failStart("Failed to create socket (errno \(errno))")
             return
         }
 
@@ -39,7 +42,7 @@ final class SocketServer {
         addr.sun_family = sa_family_t(AF_UNIX)
         let pathBytes = socketPath.utf8CString
         guard pathBytes.count <= MemoryLayout.size(ofValue: addr.sun_path) else {
-            fail("Socket path too long")
+            failStart("Socket path too long")
             return
         }
         withUnsafeMutablePointer(to: &addr.sun_path) { ptr in
@@ -56,13 +59,13 @@ final class SocketServer {
             }
         }
         guard bindResult == 0 else {
-            fail("Failed to bind \(socketPath) (errno \(errno))")
+            failStart("Failed to bind \(socketPath) (errno \(errno))")
             return
         }
 
         // Listen
         guard listen(serverFd, 5) == 0 else {
-            fail("Failed to listen (errno \(errno))")
+            failStart("Failed to listen (errno \(errno))")
             return
         }
 
@@ -96,6 +99,7 @@ final class SocketServer {
         }
         clientSources.removeAll()
         clientBuffers.removeAll()
+        clientWriteQueues.removeAll()
 
         acceptSource?.cancel()
         acceptSource = nil
@@ -109,7 +113,7 @@ final class SocketServer {
 
     // MARK: - Private
 
-    private func fail(_ message: String) {
+    private func failStart(_ message: String) {
         print(message)
         startError = message
         if serverFd >= 0 { Darwin.close(serverFd) }
@@ -153,6 +157,8 @@ final class SocketServer {
 
     private func setupClientSource(fd: Int32) {
         clientBuffers[fd] = Data()
+        let writeQueue = DispatchQueue(label: "clause.client.\(fd)")
+        clientWriteQueues[fd] = writeQueue
 
         let source = DispatchSource.makeReadSource(fileDescriptor: fd, queue: .main)
         source.setEventHandler { [weak self] in
@@ -161,7 +167,7 @@ final class SocketServer {
             }
         }
         source.setCancelHandler {
-            Darwin.close(fd)
+            writeQueue.async { Darwin.close(fd) }
         }
         source.resume()
         clientSources[fd] = source
@@ -191,6 +197,7 @@ final class SocketServer {
         clientSources[fd]?.cancel()
         clientSources.removeValue(forKey: fd)
         clientBuffers.removeValue(forKey: fd)
+        clientWriteQueues.removeValue(forKey: fd)
         print("CLI disconnected: fd=\(fd)")
     }
 
@@ -291,7 +298,9 @@ final class SocketServer {
         let status: DecisionStatus? = try enumParam(request, "status")
         try requireDecisionForStatus(status, type: type)
 
-        let note = noteStore.addNote(text: text, source: .claude, type: type, status: status, context: caller)
+        guard let note = noteStore.addNoteDurably(text: text, source: .claude, type: type, status: status, context: caller) else {
+            return fail(.internalError, "Board could not be saved, note not added: \(noteStore.saveError ?? "unknown error")", request)
+        }
         let ts = ISO8601DateFormatter().string(from: note.timestamp)
         return IPCResponse(
             result: ["id": .string(note.id.uuidString), "ref": note.ref.map { .string($0) } ?? .null, "ts": .string(ts)],
@@ -353,11 +362,18 @@ final class SocketServer {
     }
 
     private func sendResponse(_ response: IPCResponse, to fd: Int32) {
-        guard var message = try? JSONEncoder().encode(response) else { return }
+        guard let writeQueue = clientWriteQueues[fd],
+              var message = try? JSONEncoder().encode(response) else { return }
         message.append(UInt8(ascii: "\n"))
-        if !SocketIO.writeAll(fd, message) {
+        let line = message
+        let source = clientSources[fd]
+        writeQueue.async { [weak self] in
+            guard !SocketIO.writeAll(fd, line) else { return }
             print("Write to CLI failed: fd=\(fd)")
-            disconnectClient(fd: fd)
+            Task { @MainActor in
+                guard let self, let source, self.clientSources[fd] === source else { return }
+                self.disconnectClient(fd: fd)
+            }
         }
     }
 }

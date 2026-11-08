@@ -87,6 +87,21 @@ struct SocketServerTests {
         #expect(h.store.notes.first?.memo == "my private thought")
     }
 
+    @Test("add_note fails, and hands out no ref, when the board cannot be saved")
+    func addNoteFailsWhenUnsaved() {
+        let store = NoteStore(snapshotURL: URL(fileURLWithPath: "/dev/null/clause/board.json"))
+        let server = SocketServer(noteStore: store)
+        let response = server.handleRequest(IPCRequest(
+            action: "add_note",
+            params: ["text": .string("pick db"), "type": .string("decision")],
+            context: AgentContext(workspaceId: "w1", paneId: "p1", pid: 1),
+            version: ClauseConstants.protocolVersion
+        ))
+        #expect(response.error?.code == ErrorCode.internalError.rawValue)
+        #expect(response.result?["ref"] == nil)
+        #expect(store.notes.isEmpty)
+    }
+
     @Test("Cross-pane delete rejected at entry point")
     func crossPaneDeleteRejected() {
         let h = Harness()

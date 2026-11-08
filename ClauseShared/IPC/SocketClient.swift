@@ -19,6 +19,7 @@ public final class SocketClient: @unchecked Sendable {
     private var buffer = Data()
     private var pendingRequests: [String: CheckedContinuation<IPCResponse, Error>] = [:]
     private var readSource: DispatchSourceRead?
+    private var connecting: Task<Void, Error>?
 
     public init(
         socketPath: String,
@@ -36,8 +37,22 @@ public final class SocketClient: @unchecked Sendable {
 
     public var isConnected: Bool { queue.sync { fd >= 0 } }
 
+    /// Parallel callers share one connection attempt, so a second attempt can never
+    /// replace a live connection and strand the responses on it.
     public func connect() async throws {
-        if isConnected { return }
+        let attempt: Task<Void, Error>? = queue.sync {
+            if fd >= 0 { return nil }
+            if let connecting { return connecting }
+            let task = Task { try await self.establish() }
+            connecting = task
+            return task
+        }
+        guard let attempt else { return }
+        defer { queue.sync { if connecting == attempt { connecting = nil } } }
+        try await attempt.value
+    }
+
+    private func establish() async throws {
         log("Connecting to socket: \(socketPath)")
         do {
             try posixConnect()
@@ -106,7 +121,7 @@ public final class SocketClient: @unchecked Sendable {
                 return
             }
             Task {
-                try await Task.sleep(for: .seconds(self.requestTimeout))
+                try? await Task.sleep(for: .seconds(self.requestTimeout))
                 let pending = self.queue.sync { self.pendingRequests.removeValue(forKey: reqId) }
                 pending?.resume(throwing: Self.error(3, "Request timeout"))
             }

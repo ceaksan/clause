@@ -41,13 +41,44 @@ final class NoteStore {
         status: DecisionStatus? = nil,
         context: AgentContext? = nil
     ) -> Note {
+        let note = insertNote(text: text, source: source, type: type, status: status, context: context)
+        pruneDecided()
+        saveTask?.cancel()
+        flushSync()
+        return note
+    }
+
+    /// For agents: the note and its ref exist only if they reached disk. On a failed save the
+    /// note is removed and nil returned, so a ref is never handed out that a crash could reuse.
+    func addNoteDurably(
+        text: String,
+        source: Note.Source,
+        type: Note.NoteType = .note,
+        status: DecisionStatus? = nil,
+        context: AgentContext? = nil
+    ) -> Note? {
+        let note = insertNote(text: text, source: source, type: type, status: status, context: context)
+        saveTask?.cancel()
+        guard flushSync() else {
+            notes.removeAll { $0.id == note.id }
+            return nil
+        }
+        pruneDecided()
+        scheduleSave()
+        return note
+    }
+
+    private func insertNote(
+        text: String,
+        source: Note.Source,
+        type: Note.NoteType,
+        status: DecisionStatus?,
+        context: AgentContext?
+    ) -> Note {
         var note = Note(text: text, source: source, type: type, status: status, context: context)
         note.seq = nextSeq
         nextSeq += 1
         notes.insert(note, at: 0)
-        pruneDecided()
-        saveTask?.cancel()
-        flushSync()
         return note
     }
 
@@ -223,8 +254,9 @@ final class NoteStore {
         }
     }
 
-    func flushSync() {
-        guard let snapshotURL else { return }
+    @discardableResult
+    func flushSync() -> Bool {
+        guard let snapshotURL else { return true }
         do {
             try FileManager.default.createDirectory(
                 at: snapshotURL.deletingLastPathComponent(),
@@ -235,9 +267,11 @@ final class NoteStore {
             encoder.outputFormatting = .prettyPrinted
             try encoder.encode(BoardSnapshot(nextSeq: nextSeq, notes: notes)).write(to: snapshotURL, options: .atomic)
             saveError = nil
+            return true
         } catch {
             print("NoteStore save error: \(error)")
             saveError = "Board not saved: \(error.localizedDescription)"
+            return false
         }
     }
 

@@ -44,7 +44,7 @@ Every note has a ref (`N-3`, `T-4`, `W-8`, `D-12`) that is never reused; click i
 
 - The board is a scratch space, not an archive. A memo goes away with its decision, including when the decision drops off after 5 newer decided ones. Keep anything durable in your own tracker.
 - Outside herdr, each agent session is its own pane (`pid-<pid>`) in a workspace named after its working directory. When the session restarts, its old notes stay on the board but the new session cannot edit them; clear them from the panel.
-- If the board cannot be saved or the socket cannot be opened, the window shows a red bar with the reason.
+- If the board cannot be saved or the socket cannot be opened, the window shows a red bar with the reason. While the board cannot be saved, agents get an error from `add_note` instead of a ref.
 
 ## Requirements
 
