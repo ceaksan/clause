@@ -1,0 +1,41 @@
+name: test
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: test-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: macos-26
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Select the newest Xcode
+        run: |
+          XCODE=$(ls -d /Applications/Xcode_*.app | sort -V | tail -1)
+          sudo xcode-select -s "$XCODE"
+          xcodebuild -version
+
+      - name: ClauseShared tests
+        run: >
+          xcodebuild test -scheme ClauseShared -destination 'platform=macOS'
+          -skipPackagePluginValidation -skipMacroValidation
+          CODE_SIGN_IDENTITY=- CODE_SIGNING_REQUIRED=NO
+
+      - name: Clause tests (includes real-socket end-to-end tests)
+        run: >
+          xcodebuild test -scheme Clause -destination 'platform=macOS'
+          -skipPackagePluginValidation -skipMacroValidation
+          CODE_SIGN_IDENTITY=- CODE_SIGNING_REQUIRED=NO
+
+      - name: clause-mcp builds
+        run: >
+          xcodebuild build -scheme ClauseMCP -configuration Release
+          -skipPackagePluginValidation -skipMacroValidation
+          CODE_SIGN_IDENTITY=- CODE_SIGNING_REQUIRED=NO
