@@ -3,11 +3,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Clause - Floating Note Companion for Claude Code</title>
-  <meta name="description" content="A minimal, ephemeral note-taking companion for Claude Code sessions. Notes, todos, warnings in a floating panel. Open source, macOS native.">
+  <title>Clause - Floating decision board for coding agents</title>
+  <meta name="description" content="A floating board for parallel coding agents. Notes, todos, warnings and decision headlines, grouped by herdr workspace and pane. Open source, macOS native.">
 
-  <meta property="og:title" content="Clause - Floating Note Companion for Claude Code">
-  <meta property="og:description" content="Your Claude Code session's memory, visible. A floating scratchpad that stays on screen while you work.">
+  <meta property="og:title" content="Clause - Floating decision board for coding agents">
+  <meta property="og:description" content="See what your agents decided. A floating board that groups agent notes and decisions by workspace and pane.">
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://github.com/ceaksan/clause">
 
@@ -100,11 +100,11 @@
         </div>
 
         <h1 class="fade-up fade-up-2" style="font-size: clamp(1.875rem, 4vw, 3rem); font-weight: 800; color: #fff; line-height: 1.1; letter-spacing: -0.03em;">
-          Your Claude Code session's memory, visible.
+          See what your agents decided.
         </h1>
 
         <p class="fade-up fade-up-3" style="font-size: 1.125rem; color: var(--v2-on-surface-variant); margin-top: 1.5rem; line-height: 1.7;">
-          A floating scratchpad that stays on screen while you work. Notes, todos, warnings. All ephemeral.
+          A floating board for parallel coding agents. Notes, todos, warnings and decision headlines, grouped by workspace and pane. You watch, you ask.
         </p>
 
         <div class="fade-up fade-up-4" style="margin-top: 2.5rem;">
@@ -131,7 +131,7 @@
       <!-- App Mockup -->
       <div class="fade-up fade-up-3" style="flex-shrink: 0;">
         <div style="position: relative;">
-          <img src="clause-ui.svg" alt="Clause floating panel showing notes, todos, and warnings" width="320" height="480" style="position: relative;" />
+          <img src="clause-ui.svg" alt="Clause floating panel showing agent notes and decisions" width="320" height="480" style="position: relative;" />
         </div>
       </div>
     </div>
@@ -143,15 +143,15 @@
       <h2 class="section-log-title" style="font-size: 0.75rem; color: var(--v2-outline); margin-bottom: 2rem; letter-spacing: 0.05em;">THE PROBLEM</h2>
 
       <p style="font-size: clamp(1.25rem, 2.5vw, 1.5rem); color: #fff; line-height: 1.4; font-weight: 700;">
-        Context vanishes between tool calls.
+        Decisions scroll away in terminals you aren't watching.
       </p>
       <p style="font-size: 1rem; color: var(--v2-on-surface-variant); margin-top: 1rem; line-height: 1.7;">
-        You forget what Claude suggested three steps ago. Your terminal scrolls past the important bits. Every interrupted thought costs you minutes of re-reading. Every lost TODO means re-discovering what needs fixing.
+        Agents running in parallel hand decision topics to each other while you look at something else. The important bits scroll past in panes you are not reading. By the time you check, you no longer know who decided what, or why.
       </p>
 
       <div style="margin-top: 2.5rem; border-left: 2px solid var(--v2-border); padding-left: 1.5rem;">
         <p style="color: var(--v2-outline); font-size: 0.875rem; font-style: italic; line-height: 1.7;">
-          Claude told you about a critical edge case in step 2. By step 7, you've scrolled past it. You either re-ask (wasting context) or miss it entirely.
+          One agent asked another to pick a migration strategy. You were reviewing a third pane. Now the choice is made and you never saw the question.
         </p>
       </div>
     </div>
@@ -178,8 +178,8 @@
           <div style="display: flex; gap: 1.5rem;">
             <div style="flex-shrink: 0; width: 2rem; height: 2rem; background: var(--v2-surface-low); border: 1px solid var(--v2-border); display: flex; align-items: center; justify-content: center; color: var(--v2-primary); font-size: 0.875rem; font-weight: 700;">1</div>
             <div>
-              <h3 style="color: var(--v2-on-surface); font-weight: 700; font-size: 0.875rem;">Claude Code spawns clause-mcp</h3>
-              <p style="color: var(--v2-on-surface-variant); margin-top: 0.5rem; font-size: 0.8125rem; line-height: 1.7;">Add one line to your MCP config. Claude Code launches the MCP server automatically. Clause.app starts if it isn't running.</p>
+              <h3 style="color: var(--v2-on-surface); font-weight: 700; font-size: 0.875rem;">Your agent spawns clause-mcp</h3>
+              <p style="color: var(--v2-on-surface-variant); margin-top: 0.5rem; font-size: 0.8125rem; line-height: 1.7;">Add one entry to your MCP config. Claude Code or any MCP client launches the server. Inside herdr, it tags every note with the workspace and pane it came from.</p>
               <div style="margin-top: 1rem; background: var(--v2-surface-lowest); border: 1px solid var(--v2-border); padding: 1rem;">
                 <pre style="font-size: 0.75rem; color: var(--v2-on-surface); line-height: 1.8;"><span style="color: var(--v2-outline);">// ~/.claude.json</span>
 <span style="color: var(--v2-outline);">"mcpServers":</span> {
@@ -197,8 +197,8 @@
           <div style="display: flex; gap: 1.5rem;">
             <div style="flex-shrink: 0; width: 2rem; height: 2rem; background: var(--v2-surface-card); border: 1px solid var(--v2-border); display: flex; align-items: center; justify-content: center; color: var(--v2-primary); font-size: 0.875rem; font-weight: 700;">2</div>
             <div>
-              <h3 style="color: var(--v2-on-surface); font-weight: 700; font-size: 0.875rem;">Notes appear in a floating panel</h3>
-              <p style="color: var(--v2-on-surface-variant); margin-top: 0.5rem; font-size: 0.8125rem; line-height: 1.7;">Claude pushes notes, todos, and warnings in real time. You add your own directly. The panel floats above everything, always visible.</p>
+              <h3 style="color: var(--v2-on-surface); font-weight: 700; font-size: 0.875rem;">Notes land on a floating board</h3>
+              <p style="color: var(--v2-on-surface-variant); margin-top: 0.5rem; font-size: 0.8125rem; line-height: 1.7;">Agents post notes, todos, warnings and decision headlines in real time, grouped by workspace and pane with their names next to the IDs. You add your own directly. The board floats above everything.</p>
             </div>
           </div>
         </div>
@@ -208,8 +208,8 @@
           <div style="display: flex; gap: 1.5rem;">
             <div style="flex-shrink: 0; width: 2rem; height: 2rem; background: var(--v2-surface-low); border: 1px solid var(--v2-border); display: flex; align-items: center; justify-content: center; color: var(--v2-primary); font-size: 0.875rem; font-weight: 700;">3</div>
             <div>
-              <h3 style="color: var(--v2-on-surface); font-weight: 700; font-size: 0.875rem;">Session ends, notes disappear</h3>
-              <p style="color: var(--v2-on-surface-variant); margin-top: 0.5rem; font-size: 0.8125rem; line-height: 1.7;">Ephemeral by design. No archive, no clutter, no stale notes from last week. Every session starts clean.</p>
+              <h3 style="color: var(--v2-on-surface); font-weight: 700; font-size: 0.875rem;">Decided items drop off</h3>
+              <p style="color: var(--v2-on-surface-variant); margin-top: 0.5rem; font-size: 0.8125rem; line-height: 1.7;">Not an archive. Each pane keeps its 5 most recent decided decisions, older ones go. Clear a whole workspace when you are done with it. Durable tasks belong in your own tracker.</p>
             </div>
           </div>
         </div>
@@ -220,12 +220,12 @@
   <!-- Note Types -->
   <section style="padding: 5rem 1.5rem;">
     <div style="max-width: 42rem; margin: 0 auto;">
-      <h2 class="section-log-title" style="font-size: 0.75rem; color: var(--v2-outline); margin-bottom: 3rem; letter-spacing: 0.05em;">THREE NOTE TYPES</h2>
+      <h2 class="section-log-title" style="font-size: 0.75rem; color: var(--v2-outline); margin-bottom: 3rem; letter-spacing: 0.05em;">FOUR NOTE TYPES</h2>
 
       <div style="border: 1px solid var(--v2-border);">
         <div style="padding: 1.25rem; border-bottom: 1px solid var(--v2-border); border-left: 3px solid var(--v2-primary); background: var(--v2-surface-card);">
           <span style="font-size: 0.6875rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--v2-primary);">note</span>
-          <p style="font-size: 0.8125rem; color: var(--v2-on-surface-variant); margin-top: 0.5rem; line-height: 1.7;">Context, references, architectural decisions. The things you need to see while coding but don't want to hold in your head.</p>
+          <p style="font-size: 0.8125rem; color: var(--v2-on-surface-variant); margin-top: 0.5rem; line-height: 1.7;">Context and references. The things you need to see while coding but don't want to hold in your head.</p>
         </div>
 
         <div style="padding: 1.25rem; border-bottom: 1px solid var(--v2-border); border-left: 3px solid #F59E0B; background: var(--v2-surface-low);">
@@ -233,9 +233,14 @@
           <p style="font-size: 0.8125rem; color: var(--v2-on-surface-variant); margin-top: 0.5rem; line-height: 1.7;">Action items and next steps. Mark them done with a click. Completed todos get strikethrough and fade out.</p>
         </div>
 
-        <div style="padding: 1.25rem; border-left: 3px solid #EF4444; background: var(--v2-surface-card);">
+        <div style="padding: 1.25rem; border-bottom: 1px solid var(--v2-border); border-left: 3px solid #EF4444; background: var(--v2-surface-card);">
           <span style="font-size: 0.6875rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: #EF4444;">warning</span>
           <p style="font-size: 0.8125rem; color: var(--v2-on-surface-variant); margin-top: 0.5rem; line-height: 1.7;">Gotchas, blockers, things that will break if you forget. The notes that prevent the "oh no" moment 20 minutes later.</p>
+        </div>
+
+        <div style="padding: 1.25rem; border-left: 3px solid #FBBF24; background: var(--v2-surface-low);">
+          <span style="font-size: 0.6875rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: #FBBF24;">decision</span>
+          <p style="font-size: 0.8125rem; color: var(--v2-on-surface-variant); margin-top: 0.5rem; line-height: 1.7;">A short headline for a decision one agent handed to another, or to you. Marked sent until it is made, then decided. Open decisions are counted in the title bar.</p>
         </div>
       </div>
     </div>
@@ -244,33 +249,29 @@
   <!-- MCP Tools -->
   <section style="padding: 5rem 1.5rem;">
     <div style="max-width: 42rem; margin: 0 auto;">
-      <h2 class="section-log-title" style="font-size: 0.75rem; color: var(--v2-outline); margin-bottom: 2rem; letter-spacing: 0.05em;">6 MCP TOOLS</h2>
-      <p style="font-size: 0.8125rem; color: var(--v2-outline); margin-bottom: 2rem;">Claude uses these automatically. You can also call them from any MCP client.</p>
+      <h2 class="section-log-title" style="font-size: 0.75rem; color: var(--v2-outline); margin-bottom: 2rem; letter-spacing: 0.05em;">5 MCP TOOLS</h2>
+      <p style="font-size: 0.8125rem; color: var(--v2-outline); margin-bottom: 2rem;">Agents use these automatically. Each pane only sees and changes its own notes.</p>
 
       <div style="border: 1px solid var(--v2-border);">
         <div style="display: flex; border-bottom: 1px solid var(--v2-border); background: var(--v2-surface-card);">
-          <div style="width: 10rem; padding: 0.75rem 1rem; font-size: 0.8125rem; color: var(--v2-primary); font-weight: 600; flex-shrink: 0; border-right: 1px solid var(--v2-border);">set_session</div>
-          <div style="padding: 0.75rem 1rem; font-size: 0.8125rem; color: var(--v2-on-surface-variant);">Set the current session name and context</div>
-        </div>
-        <div style="display: flex; border-bottom: 1px solid var(--v2-border); background: var(--v2-surface-low);">
           <div style="width: 10rem; padding: 0.75rem 1rem; font-size: 0.8125rem; color: var(--v2-primary); font-weight: 600; flex-shrink: 0; border-right: 1px solid var(--v2-border);">add_note</div>
-          <div style="padding: 0.75rem 1rem; font-size: 0.8125rem; color: var(--v2-on-surface-variant);">Add a note, todo, or warning to the panel</div>
-        </div>
-        <div style="display: flex; border-bottom: 1px solid var(--v2-border); background: var(--v2-surface-card);">
-          <div style="width: 10rem; padding: 0.75rem 1rem; font-size: 0.8125rem; color: var(--v2-primary); font-weight: 600; flex-shrink: 0; border-right: 1px solid var(--v2-border);">list_notes</div>
-          <div style="padding: 0.75rem 1rem; font-size: 0.8125rem; color: var(--v2-on-surface-variant);">List all notes in the current session</div>
+          <div style="padding: 0.75rem 1rem; font-size: 0.8125rem; color: var(--v2-on-surface-variant);">Add a note, todo, warning, or decision (sent or decided)</div>
         </div>
         <div style="display: flex; border-bottom: 1px solid var(--v2-border); background: var(--v2-surface-low);">
-          <div style="width: 10rem; padding: 0.75rem 1rem; font-size: 0.8125rem; color: var(--v2-primary); font-weight: 600; flex-shrink: 0; border-right: 1px solid var(--v2-border);">edit_note</div>
-          <div style="padding: 0.75rem 1rem; font-size: 0.8125rem; color: var(--v2-on-surface-variant);">Update an existing note by ID</div>
+          <div style="width: 10rem; padding: 0.75rem 1rem; font-size: 0.8125rem; color: var(--v2-primary); font-weight: 600; flex-shrink: 0; border-right: 1px solid var(--v2-border);">list_notes</div>
+          <div style="padding: 0.75rem 1rem; font-size: 0.8125rem; color: var(--v2-on-surface-variant);">List this pane's notes</div>
         </div>
         <div style="display: flex; border-bottom: 1px solid var(--v2-border); background: var(--v2-surface-card);">
-          <div style="width: 10rem; padding: 0.75rem 1rem; font-size: 0.8125rem; color: var(--v2-primary); font-weight: 600; flex-shrink: 0; border-right: 1px solid var(--v2-border);">delete_note</div>
-          <div style="padding: 0.75rem 1rem; font-size: 0.8125rem; color: var(--v2-on-surface-variant);">Remove a note by ID</div>
+          <div style="width: 10rem; padding: 0.75rem 1rem; font-size: 0.8125rem; color: var(--v2-primary); font-weight: 600; flex-shrink: 0; border-right: 1px solid var(--v2-border);">edit_note</div>
+          <div style="padding: 0.75rem 1rem; font-size: 0.8125rem; color: var(--v2-on-surface-variant);">Update one of this pane's notes, e.g. mark a decision decided</div>
         </div>
-        <div style="display: flex; background: var(--v2-surface-low);">
+        <div style="display: flex; border-bottom: 1px solid var(--v2-border); background: var(--v2-surface-low);">
+          <div style="width: 10rem; padding: 0.75rem 1rem; font-size: 0.8125rem; color: var(--v2-primary); font-weight: 600; flex-shrink: 0; border-right: 1px solid var(--v2-border);">delete_note</div>
+          <div style="padding: 0.75rem 1rem; font-size: 0.8125rem; color: var(--v2-on-surface-variant);">Remove one of this pane's notes</div>
+        </div>
+        <div style="display: flex; background: var(--v2-surface-card);">
           <div style="width: 10rem; padding: 0.75rem 1rem; font-size: 0.8125rem; color: var(--v2-primary); font-weight: 600; flex-shrink: 0; border-right: 1px solid var(--v2-border);">clear_notes</div>
-          <div style="padding: 0.75rem 1rem; font-size: 0.8125rem; color: var(--v2-on-surface-variant);">Clear all notes for the current session</div>
+          <div style="padding: 0.75rem 1rem; font-size: 0.8125rem; color: var(--v2-on-surface-variant);">Clear this pane's notes</div>
         </div>
       </div>
     </div>
@@ -282,7 +283,7 @@
       <h2 class="section-log-title" style="font-size: 0.75rem; color: var(--v2-outline); margin-bottom: 2rem; letter-spacing: 0.05em;">UNDER THE HOOD</h2>
 
       <div style="background: var(--v2-surface-card); border: 1px solid var(--v2-border); padding: 1.5rem;">
-        <pre style="font-size: 0.8125rem; color: var(--v2-on-surface); line-height: 1.8;"><span style="color: var(--v2-outline);">Claude Code</span>
+        <pre style="font-size: 0.8125rem; color: var(--v2-on-surface); line-height: 1.8;"><span style="color: var(--v2-outline);">Coding agent</span> <span style="color: var(--v2-outline);">(herdr pane: HERDR_WORKSPACE_ID, HERDR_PANE_ID)</span>
     <span style="color: var(--v2-outline);">|</span>
     <span style="color: var(--v2-outline);">| stdio (MCP protocol)</span>
     <span style="color: var(--v2-outline);">v</span>
@@ -319,14 +320,22 @@
         </div>
 
         <div style="display: flex; align-items: center; gap: 1rem; padding: 1rem 1.25rem; border-bottom: 1px solid var(--v2-border); background: var(--v2-surface-low);">
-          <div style="width: 1rem; height: 1rem; border: 1px solid var(--v2-border); flex-shrink: 0;"></div>
+          <svg style="width: 1rem; height: 1rem; color: var(--v2-secondary); flex-shrink: 0;" viewBox="0 0 16 16" fill="currentColor"><path d="M13.78 4.22a.75.75 0 0 1 0 1.06l-7.25 7.25a.75.75 0 0 1-1.06 0L2.22 9.28a.75.75 0 0 1 1.06-1.06L6 10.94l6.72-6.72a.75.75 0 0 1 1.06 0Z"/></svg>
           <div>
-            <span style="font-size: 0.8125rem; color: var(--v2-on-surface); font-weight: 700;">Milestone 2</span>
-            <span style="font-size: 0.8125rem; color: var(--v2-outline); margin-left: 0.5rem;">Global hotkey, multi-session tabs, search, session cleanup</span>
+            <span style="font-size: 0.8125rem; color: var(--v2-on-surface); font-weight: 700;">herdr board</span>
+            <span style="font-size: 0.8125rem; color: var(--v2-outline); margin-left: 0.5rem;">Multi-workspace, multi-pane notes and decisions</span>
           </div>
         </div>
 
-        <div style="display: flex; align-items: center; gap: 1rem; padding: 1rem 1.25rem; background: var(--v2-surface-card);">
+        <div style="display: flex; align-items: center; gap: 1rem; padding: 1rem 1.25rem; border-bottom: 1px solid var(--v2-border); background: var(--v2-surface-card);">
+          <div style="width: 1rem; height: 1rem; border: 1px solid var(--v2-border); flex-shrink: 0;"></div>
+          <div>
+            <span style="font-size: 0.8125rem; color: var(--v2-on-surface); font-weight: 700;">Milestone 2</span>
+            <span style="font-size: 0.8125rem; color: var(--v2-outline); margin-left: 0.5rem;">Global hotkey, note search and filtering</span>
+          </div>
+        </div>
+
+        <div style="display: flex; align-items: center; gap: 1rem; padding: 1rem 1.25rem; background: var(--v2-surface-low);">
           <div style="width: 1rem; height: 1rem; border: 1px solid var(--v2-border); flex-shrink: 0;"></div>
           <div>
             <span style="font-size: 0.8125rem; color: var(--v2-on-surface); font-weight: 700;">Milestone 3</span>
