@@ -92,11 +92,10 @@ final class SocketServer {
     func stop() {
         // Notify connected CLIs
         let shutdown = IPCResponse(shutdown: ShutdownInfo(reason: "app_quit"))
-        for (fd, _) in clientSources {
+        for (fd, source) in clientSources {
             sendResponse(shutdown, to: fd)
-            Darwin.close(fd)
+            source.cancel()
         }
-        clientSources.values.forEach { $0.cancel() }
         clientSources.removeAll()
         clientBuffers.removeAll()
 

@@ -6,6 +6,7 @@ struct ContentView: View {
     @State private var inputText = ""
     @State private var selectedType: Note.NoteType = .note
     @State private var isFloating = true
+    @State private var pendingClear: NoteStore.WorkspaceGroup?
 
     var body: some View {
         VStack(spacing: 0) {
@@ -27,6 +28,18 @@ struct ContentView: View {
         }
         .background(Color(white: 0.075))
         .frame(minWidth: 280, minHeight: 300)
+        .confirmationDialog(
+            "Clear \(pendingClear?.label ?? pendingClear?.id ?? "workspace")?",
+            isPresented: Binding(get: { pendingClear != nil }, set: { if !$0 { pendingClear = nil } }),
+            presenting: pendingClear
+        ) { workspace in
+            Button("Clear \(workspace.panes.reduce(0) { $0 + $1.notes.count }) notes", role: .destructive) {
+                _ = noteStore.clearWorkspace(workspace.id)
+            }
+            Button("Cancel", role: .cancel) {}
+        } message: { _ in
+            Text("Notes and private memos in this workspace are deleted. This cannot be undone.")
+        }
     }
 
     private var titleBar: some View {
@@ -68,9 +81,9 @@ struct ContentView: View {
                     VStack(alignment: .leading, spacing: 10) {
                         workspaceHeader(
                             title: workspace.label ?? workspace.id,
-                            subtitle: workspace.label == nil ? nil : workspace.id,
-                            open: Self.openCount(workspace.panes.flatMap(\.notes)),
-                            onClear: { _ = noteStore.clearWorkspace(workspace.id) }
+                            subtitle: Self.workspaceSubtitle(workspace),
+                            open: noteStore.workspaceGroups.count > 1 ? Self.openCount(workspace.panes.flatMap(\.notes)) : 0,
+                            onClear: { pendingClear = workspace }
                         )
                         ForEach(workspace.panes) { pane in
                             paneGroup(pane)
@@ -183,6 +196,11 @@ struct ContentView: View {
                 _ = noteStore.deleteNote(id: note.id)
             }
         }
+    }
+
+    static func workspaceSubtitle(_ workspace: NoteStore.WorkspaceGroup) -> String? {
+        guard let label = workspace.label, !workspace.id.hasPrefix("local") else { return nil }
+        return workspace.id == label ? nil : workspace.id
     }
 
     static func openCount(_ notes: [Note]) -> Int {

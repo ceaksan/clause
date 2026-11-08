@@ -66,7 +66,7 @@ public struct Note: Identifiable, Codable, Equatable, Sendable {
     ) {
         self.id = id
         self.timestamp = timestamp
-        self.text = String(text.prefix(4096))
+        self.text = text
         self.source = source
         self.type = type
         self.completed = completed
@@ -80,6 +80,8 @@ public struct Note: Identifiable, Codable, Equatable, Sendable {
     }
 
     public mutating func normalize() {
+        if text.count > ClauseConstants.maxNoteLength { text = String(text.prefix(ClauseConstants.maxNoteLength)) }
+        if let memo, memo.count > ClauseConstants.maxMemoLength { self.memo = String(memo.prefix(ClauseConstants.maxMemoLength)) }
         if type != .todo { completed = false }
         guard type == .decision else {
             status = nil

@@ -124,17 +124,17 @@ final class NoteStore {
                             notes: Self.ordered(paneNotes)
                         )
                     }
-                    .sorted { Self.lastActivity(byPane[$0.id]!) > Self.lastActivity(byPane[$1.id]!) }
+                    .sorted { Self.newer(byPane[$0.id]!, than: byPane[$1.id]!) }
                 return (
                     group: WorkspaceGroup(
                         id: workspaceId,
                         label: Self.newestLabel(workspaceNotes, \.workspaceLabel),
                         panes: panes
                     ),
-                    activity: Self.lastActivity(workspaceNotes)
+                    notes: workspaceNotes
                 )
             }
-            .sorted { $0.activity > $1.activity }
+            .sorted { Self.newer($0.notes, than: $1.notes) }
             .map(\.group)
     }
 
@@ -172,7 +172,9 @@ final class NoteStore {
     }
 
     private static func ordered(_ paneNotes: [Note]) -> [Note] {
-        let newest: (Note, Note) -> Bool = { $0.timestamp > $1.timestamp }
+        let newest: (Note, Note) -> Bool = {
+            $0.timestamp != $1.timestamp ? $0.timestamp > $1.timestamp : ($0.seq ?? 0) > ($1.seq ?? 0)
+        }
         let sent = paneNotes.filter { $0.type == .decision && $0.status == .sent }.sorted(by: newest)
         let other = paneNotes.filter { $0.type != .decision }.sorted(by: newest)
         let decided = paneNotes
@@ -183,6 +185,12 @@ final class NoteStore {
 
     private static func lastActivity(_ group: [Note]) -> Date {
         group.map { max($0.timestamp, $0.decidedAt ?? .distantPast) }.max() ?? .distantPast
+    }
+
+    private static func newer(_ lhs: [Note], than rhs: [Note]) -> Bool {
+        let (left, right) = (lastActivity(lhs), lastActivity(rhs))
+        if left != right { return left > right }
+        return (lhs.compactMap(\.seq).max() ?? 0) > (rhs.compactMap(\.seq).max() ?? 0)
     }
 
     private static func newestLabel(_ group: [Note], _ key: KeyPath<Note, String?>) -> String? {
@@ -205,8 +213,8 @@ final class NoteStore {
         periodicSaveTask = Task { [weak self] in
             while !Task.isCancelled {
                 try? await Task.sleep(for: .seconds(10))
-                guard !Task.isCancelled else { return }
-                self?.flushSync()
+                guard !Task.isCancelled, let self else { return }
+                self.flushSync()
             }
         }
     }

@@ -112,7 +112,11 @@ struct NoteStoreTests {
         let note = store.notes.first { $0.id == converted.id }
         #expect(note?.status == nil)
         #expect(note?.decidedAt == nil)
+        let open = store.addNote(text: "was open", source: .claude, type: .decision, context: p1)
+        #expect(store.openDecisionCount == 1)
+        _ = store.editNote(id: open.id, type: .note, caller: p1)
         #expect(store.openDecisionCount == 0)
+        #expect(store.notes.first { $0.id == open.id }?.status == nil)
         for i in 0..<5 { store.addNote(text: "d\(i)", source: .claude, type: .decision, status: .decided, context: p1) }
         #expect(store.notes.contains { $0.id == converted.id })
     }
@@ -296,5 +300,44 @@ struct NoteStoreTests {
         let store = NoteStore(snapshotURL: nil)
         store.addNote(text: String(repeating: "a", count: 5000), source: .user, type: .note)
         #expect(store.notes.first?.text.count == 4096)
+    }
+
+    @Test("Loaded text and memo are truncated to their limits")
+    func loadTruncates() throws {
+        let dir = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        let url = dir.appendingPathComponent("board.json")
+        defer { try? FileManager.default.removeItem(at: dir) }
+        try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        var note = Note(text: "x", source: .claude, type: .decision, context: ctx("w1", "p1"))
+        note.text = String(repeating: "a", count: 5000)
+        note.memo = String(repeating: "m", count: 1500)
+        try JSONEncoder().encode([note]).write(to: url)
+        let store = NoteStore(snapshotURL: url)
+        #expect(store.notes.first?.text.count == ClauseConstants.maxNoteLength)
+        #expect(store.notes.first?.memo?.count == ClauseConstants.maxMemoLength)
+    }
+
+    @Test("Groups with equal timestamps keep a stable order, newest ref first")
+    func equalTimestampOrderStable() throws {
+        let dir = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        let url = dir.appendingPathComponent("board.json")
+        defer { try? FileManager.default.removeItem(at: dir) }
+        try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        let ts = Date(timeIntervalSince1970: 1_700_000_000)
+        var notes: [Note] = []
+        for i in 1...6 {
+            var note = Note(timestamp: ts, text: "w\(i)", source: .claude, context: ctx("w\(i)", "p1"))
+            note.seq = i
+            notes.append(note)
+        }
+        for i in 7...12 {
+            var note = Note(timestamp: ts, text: "p\(i)", source: .claude, context: ctx("w0", "p\(i)"))
+            note.seq = i
+            notes.append(note)
+        }
+        try JSONEncoder().encode(notes).write(to: url)
+        let groups = NoteStore(snapshotURL: url).workspaceGroups
+        #expect(groups.map(\.id) == ["w0", "w6", "w5", "w4", "w3", "w2", "w1"])
+        #expect(groups.first?.panes.map(\.id) == ["p12", "p11", "p10", "p9", "p8", "p7"])
     }
 }

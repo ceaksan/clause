@@ -26,7 +26,7 @@ struct NoteRowView: View {
         let time = date.formatted(.dateTime.hour().minute())
         let days = calendar.dateComponents([.day], from: calendar.startOfDay(for: date), to: calendar.startOfDay(for: now)).day ?? 0
         switch days {
-        case 0: return "Today \(time)"
+        case 0: return time
         case 1: return "Yesterday \(time)"
         default: return "\(date.formatted(.dateTime.day().month(.abbreviated))) \(time)"
         }
@@ -56,6 +56,7 @@ struct NoteRowView: View {
                     .font(.system(size: 13, weight: isOpenDecision ? .medium : .regular))
                     .foregroundStyle(Color(white: isClosed ? 0.5 : 0.9))
                     .strikethrough(note.completed, color: Color(white: 0.4))
+                    .lineSpacing(4)
                     .lineLimit(6)
                     .fixedSize(horizontal: false, vertical: true)
                     .textSelection(.enabled)
@@ -158,6 +159,7 @@ struct NoteRowView: View {
             Text(memo)
                 .font(.system(size: 12))
                 .foregroundStyle(Color(white: 0.72))
+                .lineSpacing(3)
                 .fixedSize(horizontal: false, vertical: true)
                 .textSelection(.enabled)
             Spacer(minLength: 0)

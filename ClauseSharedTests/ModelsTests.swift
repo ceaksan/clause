@@ -95,12 +95,11 @@ struct NoteTests {
         #expect(try roundTrip(note) == note)
     }
 
-    @Test("Old note JSON without new fields decodes")
+    @Test("Old note JSON in the board file format decodes without new fields")
     func oldNoteJSONDecodes() throws {
-        let json = #"{"id":"6F9619FF-8B86-D011-B42D-00C04FC964FF","timestamp":"2026-03-22T10:00:00Z","source":"claude","type":"todo","text":"x","completed":false}"#
-        let decoder = JSONDecoder()
-        decoder.dateDecodingStrategy = .iso8601
-        let note = try decoder.decode(Note.self, from: Data(json.utf8))
+        let json = #"{"id":"6F9619FF-8B86-D011-B42D-00C04FC964FF","timestamp":796384800,"source":"claude","type":"todo","text":"x","completed":false}"#
+        let note = try JSONDecoder().decode(Note.self, from: Data(json.utf8))
+        #expect(note.timestamp == Date(timeIntervalSinceReferenceDate: 796_384_800))
         #expect(note.type == .todo)
         #expect(note.workspaceId == nil)
         #expect(note.paneId == nil)

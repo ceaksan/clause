@@ -6,7 +6,7 @@ Minimal, ephemeral observer board for coding agents running in herdr: a floating
 Living Architecture Template v1.0
 Source: https://github.com/ceaksan/living-architecture
 Depth: L2
-Last verified: 2026-11-07
+Last verified: 2026-11-08
 -->
 
 ## Stack & Dependencies
@@ -58,7 +58,7 @@ Clause/
 │   │   └── SocketServer.swift  # POSIX socket server; version/context checks, strict params, routes to NoteStore
 │   ├── Views/
 │   │   ├── ContentView.swift    # Title bar, "You" section, workspace > pane groups, input bar
-│   │   ├── NoteRowView.swift    # Note card: type or SENT/DECIDED badge, timestamp, text
+│   │   ├── NoteRowView.swift    # Note row: status glyph, text, ref (copy), post time, private memo
 │   │   └── InputBar.swift       # Text input + Note/Todo/Warning type selector
 │   └── Window/
 │       └── FloatingPanel.swift  # NSPanel subclass (unused, see tech debt)
@@ -93,7 +93,7 @@ Clause/
 Agent in a herdr pane (HERDR_WORKSPACE_ID, HERDR_PANE_ID in env)
   --stdin/JSON-RPC-->
     clause-mcp
-      --> AgentContext from env (fallback: local / pid-<pid>)
+      --> AgentContext from env (fallback: local:<directory> / pid-<pid>)
       --> add_note only: herdr workspace get / herdr agent get (2 s timeout each)
       --> IPCRequest {action, params, context, version: "2"}
         --Unix socket (~/.clause/clause.sock)-->
@@ -167,7 +167,7 @@ Retention: each `(workspaceId, paneId)` keeps its 5 most recently decided decisi
 | HERDR_WORKSPACE_ID | Workspace scope, set by herdr in every pane | No |
 | HERDR_PANE_ID | Pane scope, set by herdr in every pane | No |
 
-Outside herdr, clause-mcp uses workspace `local`, pane `pid-<pid>` and the basename of its working directory as the workspace label.
+Outside herdr, clause-mcp uses workspace `local:<directory>`, pane `pid-<pid>` and the basename of its working directory as the workspace label.
 
 **File system paths:**
 
@@ -212,6 +212,8 @@ No external services, no API keys, no network access.
 - [ ] Agents only post if their instruction files say so (CLAUDE.md / AGENTS.md rule, outside this repo)
 
 **Low priority:**
+- [ ] clause-mcp does not reconnect after Clause.app restarts; the agent session must be restarted
+- [ ] swift-sdk StdioTransport drops unhandled requests when stdin hits EOF; real clients keep stdin open, smoke scripts must too
 - [ ] Legacy ~/.clause/sessions/ directory is left on disk
 - [ ] No graceful socket cleanup on abnormal app termination; stale .sock file can block next launch
 - [ ] main.swift:116 request-timeout Task result is unused (compiler warning)

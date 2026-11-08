@@ -12,10 +12,11 @@ public enum HerdrContext {
         if isHerdr(env: env), let workspace = env[workspaceEnvKey], let pane = env[paneEnvKey] {
             return AgentContext(workspaceId: workspace, paneId: pane, pid: pid)
         }
+        let directory = URL(fileURLWithPath: cwd).lastPathComponent
         return AgentContext(
-            workspaceId: "local",
+            workspaceId: "local:\(directory)",
             paneId: "pid-\(pid)",
-            workspaceLabel: URL(fileURLWithPath: cwd).lastPathComponent,
+            workspaceLabel: directory,
             pid: pid
         )
     }

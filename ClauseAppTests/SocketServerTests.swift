@@ -160,6 +160,20 @@ struct SocketServerTests {
         #expect(edit.error?.code == ErrorCode.invalidParams.rawValue)
     }
 
+    @Test("Converting an open decision to a note clears its status at the entry point")
+    func sentDecisionToNote() throws {
+        let h = Harness()
+        let id = h.add("pick db", type: "decision", pane: "p1")
+        #expect(h.store.openDecisionCount == 1)
+        let edit = h.call("edit_note", ["id": .string(id), "type": .string("note")], pane: "p1")
+        #expect(edit.error == nil)
+        #expect(h.store.openDecisionCount == 0)
+        let json = try #require(h.call("list_notes", pane: "p1").result?["notes"]?.stringValue)
+        let rows = try #require(try JSONSerialization.jsonObject(with: Data(json.utf8)) as? [[String: Any]])
+        #expect(rows.first?["type"] as? String == "note")
+        #expect(rows.first?["status"] is NSNull)
+    }
+
     @Test("Status allowed when edit converts to decision")
     func statusWithConversionAllowed() {
         let h = Harness()

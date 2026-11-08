@@ -1,6 +1,6 @@
 # Clause
 
-A minimal, ephemeral note-taking companion for Claude Code sessions.
+A floating board that shows what your coding agents decided, across every herdr workspace and pane.
 
 <p align="center">
   <img src="assets/demo.gif" alt="Clause demo: Claude Code session with floating note panel" width="800">
@@ -8,7 +8,7 @@ A minimal, ephemeral note-taking companion for Claude Code sessions.
 
 ## Why Clause?
 
-During Claude Code sessions, you accumulate scratch context: decisions made, warnings to remember, TODOs to track. This context lives in your head or gets buried in terminal output. Clause gives it a visible, structured home that both you and Claude can read and write to, in real time.
+During Claude Code sessions, you accumulate scratch context: decisions made, warnings to remember, TODOs to track. This context lives in your head or gets buried in terminal output. Clause gives it a visible, structured home: agents post to it, and you read it, check items off and add private memos, in real time.
 
 ## What it does
 
@@ -24,7 +24,7 @@ Clause uses a two-process architecture:
 
 The agent spawns `clause-mcp`, which connects to the running `Clause.app` instance. All MCP tool calls are forwarded over the socket in real time.
 
-Inside herdr, `clause-mcp` reads `HERDR_WORKSPACE_ID` and `HERDR_PANE_ID` and tags every note with them; agents never pass identity themselves. Workspace and agent names are looked up through the `herdr` CLI and shown next to the IDs. Each pane only sees and changes its own notes. Outside herdr, notes go to a `local` workspace.
+Inside herdr, `clause-mcp` reads `HERDR_WORKSPACE_ID` and `HERDR_PANE_ID` and tags every note with them; agents never pass identity themselves. Workspace and agent names are looked up through the `herdr` CLI and shown next to the IDs. Each pane only sees and changes its own notes. Outside herdr, notes go to a `local:<directory>` workspace named after the agent's working directory.
 
 ## MCP Tools
 

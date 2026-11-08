@@ -48,7 +48,7 @@ every IPC request. Agents never pass identity themselves.
 
 ```
 AgentContext {
-  workspaceId: String      // HERDR_WORKSPACE_ID, or "local" outside herdr
+  workspaceId: String      // HERDR_WORKSPACE_ID, or "local:<directory>" outside herdr
   paneId: String           // HERDR_PANE_ID, or "pid-<pid>" outside herdr
   workspaceLabel: String?  // herdr workspace label
   agentLabel: String?      // herdr agent name or display_agent
