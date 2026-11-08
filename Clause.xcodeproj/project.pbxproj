@@ -11,15 +11,20 @@
 		0613BEFDE20AAEB6611FD929 /* HerdrContext.swift in Sources */ = {isa = PBXBuildFile; fileRef = 68551DBBB873F6E52562C71A /* HerdrContext.swift */; };
 		081FC50F2B6169BD23E3FF29 /* AgentContext.swift in Sources */ = {isa = PBXBuildFile; fileRef = E016E4EDD13EB674C064613A /* AgentContext.swift */; };
 		0B6214FC7F57D0EA2C4676AE /* libClauseShared.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 1C399553432E23CF791F2A47 /* libClauseShared.a */; };
+		0DF3F3F150B0FB18FD352DAA /* SocketClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5C47E89B2C3D46FFB095F3B1 /* SocketClient.swift */; };
 		202649D6AD3840CBE9CB63CB /* HerdrContextTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 536396B0A2AF1304E517C7F0 /* HerdrContextTests.swift */; };
 		22767DE1618461870B85A594 /* NoteRowViewTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 586C629822D475EE972FDE3A /* NoteRowViewTests.swift */; };
 		42F860E5B3D647E84A4B31D7 /* libClauseShared.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 1C399553432E23CF791F2A47 /* libClauseShared.a */; };
+		43FA495EC3D9B094B3E1CB4C /* SocketIO.swift in Sources */ = {isa = PBXBuildFile; fileRef = 395A977BE032A749840D68D5 /* SocketIO.swift */; };
 		44D97E1EBC8E6D8F154EF45B /* NoteRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 138A7CD25F661A758BE70A02 /* NoteRowView.swift */; };
 		48381B58342B35567A1DA76F /* InputBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = C7BB034C8304955109B69E0D /* InputBar.swift */; };
+		5BC56F6D57B9E52ED2F48EDD /* SocketEndToEndTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF801B014842122BA14CBB83 /* SocketEndToEndTests.swift */; };
 		6092138D1E463213220FD98B /* SocketConstants.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED758C671D85AC61CED9A543 /* SocketConstants.swift */; };
 		66B058624A8197161A08EA66 /* NoteStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = EAE62D0D99F493CAE644F711 /* NoteStore.swift */; };
+		687DEFC0BA483FAE5788A191 /* SocketClientTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19E1476442427C182F737F9E /* SocketClientTests.swift */; };
 		759F578C74A6F860BFB55D84 /* SocketServerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B08BA20C2A14A446EA12E23F /* SocketServerTests.swift */; };
 		847BDEB4CFFE46737050C21E /* ClauseApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E679C9171C5DCA7D632CF7D /* ClauseApp.swift */; };
+		849D6766FF28A94E47FB0213 /* ClauseMCP in Embed Dependencies */ = {isa = PBXBuildFile; fileRef = AEB6F4092B029A2FC4D1523A /* ClauseMCP */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		99D0D9900BB78846D34962C3 /* Note.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6AC6AECC6F2F2F123FB848DD /* Note.swift */; };
 		9AF812BD5CE750C93B9993FD /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF7BD58B9A9A00832D0B5EB5 /* AppDelegate.swift */; };
 		A90E0712316726C773EA5976 /* MCP in Frameworks */ = {isa = PBXBuildFile; productRef = BD9504F69239A18F47DDFF81 /* MCP */; };
@@ -47,6 +52,13 @@
 			remoteGlobalIDString = 79A9BDE920131998B23CB3D6;
 			remoteInfo = ClauseShared;
 		};
+		64200BFC6F8AC3A414CC2468 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = A43798169471E077C175DCFD /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 0E5BC93B071AA371F98E344B;
+			remoteInfo = ClauseMCP;
+		};
 		A1DD436933CDFD8B7DAB545C /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = A43798169471E077C175DCFD /* Project object */;
@@ -63,15 +75,32 @@
 		};
 /* End PBXContainerItemProxy section */
 
+/* Begin PBXCopyFilesBuildPhase section */
+		CE50EE57D4B2B260DE3CE941 /* Embed Dependencies */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 6;
+			files = (
+				849D6766FF28A94E47FB0213 /* ClauseMCP in Embed Dependencies */,
+			);
+			name = "Embed Dependencies";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
 /* Begin PBXFileReference section */
 		09A88343C537438E37A6A2EE /* ModelsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModelsTests.swift; sourceTree = "<group>"; };
 		0CD1959E5F356F45E8E42BD2 /* NoteStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoteStoreTests.swift; sourceTree = "<group>"; };
 		138A7CD25F661A758BE70A02 /* NoteRowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoteRowView.swift; sourceTree = "<group>"; };
+		19E1476442427C182F737F9E /* SocketClientTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SocketClientTests.swift; sourceTree = "<group>"; };
 		1C399553432E23CF791F2A47 /* libClauseShared.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libClauseShared.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		1E679C9171C5DCA7D632CF7D /* ClauseApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClauseApp.swift; sourceTree = "<group>"; };
 		376F1FB5A9554255BA418683 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		395A977BE032A749840D68D5 /* SocketIO.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SocketIO.swift; sourceTree = "<group>"; };
 		536396B0A2AF1304E517C7F0 /* HerdrContextTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HerdrContextTests.swift; sourceTree = "<group>"; };
 		586C629822D475EE972FDE3A /* NoteRowViewTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoteRowViewTests.swift; sourceTree = "<group>"; };
+		5C47E89B2C3D46FFB095F3B1 /* SocketClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SocketClient.swift; sourceTree = "<group>"; };
 		68551DBBB873F6E52562C71A /* HerdrContext.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HerdrContext.swift; sourceTree = "<group>"; };
 		6AC6AECC6F2F2F123FB848DD /* Note.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Note.swift; sourceTree = "<group>"; };
 		7C562DBBEEC1CF92397BDFCF /* ClauseAppTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ClauseAppTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -83,6 +112,7 @@
 		B9BF5775CC89F09D26141B05 /* SocketServer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SocketServer.swift; sourceTree = "<group>"; };
 		C7BB034C8304955109B69E0D /* InputBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InputBar.swift; sourceTree = "<group>"; };
 		D310260CFB7330E22195A00F /* ClauseSharedTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ClauseSharedTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		DF801B014842122BA14CBB83 /* SocketEndToEndTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SocketEndToEndTests.swift; sourceTree = "<group>"; };
 		E016E4EDD13EB674C064613A /* AgentContext.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AgentContext.swift; sourceTree = "<group>"; };
 		EAE62D0D99F493CAE644F711 /* NoteStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoteStore.swift; sourceTree = "<group>"; };
 		ED758C671D85AC61CED9A543 /* SocketConstants.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SocketConstants.swift; sourceTree = "<group>"; };
@@ -124,6 +154,7 @@
 			children = (
 				536396B0A2AF1304E517C7F0 /* HerdrContextTests.swift */,
 				09A88343C537438E37A6A2EE /* ModelsTests.swift */,
+				19E1476442427C182F737F9E /* SocketClientTests.swift */,
 			);
 			path = ClauseSharedTests;
 			sourceTree = "<group>";
@@ -170,6 +201,7 @@
 			children = (
 				586C629822D475EE972FDE3A /* NoteRowViewTests.swift */,
 				0CD1959E5F356F45E8E42BD2 /* NoteStoreTests.swift */,
+				DF801B014842122BA14CBB83 /* SocketEndToEndTests.swift */,
 				B08BA20C2A14A446EA12E23F /* SocketServerTests.swift */,
 			);
 			path = ClauseAppTests;
@@ -179,7 +211,9 @@
 			isa = PBXGroup;
 			children = (
 				AA6DC0182162E8A2D125D3F9 /* MessageTypes.swift */,
+				5C47E89B2C3D46FFB095F3B1 /* SocketClient.swift */,
 				ED758C671D85AC61CED9A543 /* SocketConstants.swift */,
+				395A977BE032A749840D68D5 /* SocketIO.swift */,
 			);
 			path = IPC;
 			sourceTree = "<group>";
@@ -282,11 +316,13 @@
 			buildPhases = (
 				FCEE14373022A7ABC2A5F109 /* Sources */,
 				C0CBE48298C1257FC0812C5E /* Frameworks */,
+				CE50EE57D4B2B260DE3CE941 /* Embed Dependencies */,
 			);
 			buildRules = (
 			);
 			dependencies = (
 				B5370C5F0FE52EB5EDF89223 /* PBXTargetDependency */,
+				DD004693097A4F97FD9C04EF /* PBXTargetDependency */,
 			);
 			name = Clause;
 			packageProductDependencies = (
@@ -421,6 +457,7 @@
 			files = (
 				22767DE1618461870B85A594 /* NoteRowViewTests.swift in Sources */,
 				B01C80915E0B39E25CF34420 /* NoteStoreTests.swift in Sources */,
+				5BC56F6D57B9E52ED2F48EDD /* SocketEndToEndTests.swift in Sources */,
 				759F578C74A6F860BFB55D84 /* SocketServerTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -433,7 +470,9 @@
 				0613BEFDE20AAEB6611FD929 /* HerdrContext.swift in Sources */,
 				F16C801EB9EBCBDD8956D45F /* MessageTypes.swift in Sources */,
 				99D0D9900BB78846D34962C3 /* Note.swift in Sources */,
+				0DF3F3F150B0FB18FD352DAA /* SocketClient.swift in Sources */,
 				6092138D1E463213220FD98B /* SocketConstants.swift in Sources */,
+				43FA495EC3D9B094B3E1CB4C /* SocketIO.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -443,6 +482,7 @@
 			files = (
 				202649D6AD3840CBE9CB63CB /* HerdrContextTests.swift in Sources */,
 				D3B95D74ABCC678207F67934 /* ModelsTests.swift in Sources */,
+				687DEFC0BA483FAE5788A191 /* SocketClientTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -478,6 +518,11 @@
 			isa = PBXTargetDependency;
 			target = 79A9BDE920131998B23CB3D6 /* ClauseShared */;
 			targetProxy = 4DA1045E2A56444B9F10F8B9 /* PBXContainerItemProxy */;
+		};
+		DD004693097A4F97FD9C04EF /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 0E5BC93B071AA371F98E344B /* ClauseMCP */;
+			targetProxy = 64200BFC6F8AC3A414CC2468 /* PBXContainerItemProxy */;
 		};
 		DDCAC932334FC37BF7973552 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;

@@ -258,6 +258,30 @@ struct NoteStoreTests {
         #expect(reloaded.addNote(text: "c", source: .user).seq == 3)
     }
 
+    @Test("A ref handed out is on disk before the call returns, so a crash cannot reuse it")
+    func refDurableWithoutFlush() throws {
+        let dir = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        let url = dir.appendingPathComponent("board.json")
+        defer { try? FileManager.default.removeItem(at: dir) }
+        let store = NoteStore(snapshotURL: url)
+        let first = store.addNote(text: "a", source: .claude, type: .decision, context: ctx("w1", "p1"))
+        let afterCrash = NoteStore(snapshotURL: url)
+        #expect(afterCrash.addNote(text: "b", source: .user).seq == (first.seq ?? 0) + 1)
+    }
+
+    @Test("A failed board save is reported, and cleared after the next good save")
+    func saveErrorVisible() throws {
+        let broken = NoteStore(snapshotURL: URL(fileURLWithPath: "/dev/null/clause/board.json"))
+        broken.addNote(text: "a", source: .user)
+        #expect(broken.saveError != nil)
+
+        let dir = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: dir) }
+        let healthy = NoteStore(snapshotURL: dir.appendingPathComponent("board.json"))
+        healthy.addNote(text: "a", source: .user)
+        #expect(healthy.saveError == nil)
+    }
+
     @Test("Legacy array board loads and gets refs in age order")
     func legacyBoardGetsRefs() throws {
         let dir = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
@@ -339,5 +363,25 @@ struct NoteStoreTests {
         let groups = NoteStore(snapshotURL: url).workspaceGroups
         #expect(groups.map(\.id) == ["w0", "w6", "w5", "w4", "w3", "w2", "w1"])
         #expect(groups.first?.panes.map(\.id) == ["p12", "p11", "p10", "p9", "p8", "p7"])
+    }
+
+    @Test("Legacy notes in the shared local workspace move to their directory's workspace on load")
+    func legacyLocalSplitByDirectory() throws {
+        let dir = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        let url = dir.appendingPathComponent("board.json")
+        defer { try? FileManager.default.removeItem(at: dir) }
+        try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        let notes = [
+            Note(text: "audit", source: .claude, context: ctx("local", "pid-1", label: "platform-tracking-audit")),
+            Note(text: "clause", source: .claude, context: ctx("local", "pid-2", label: "clause")),
+            Note(text: "herdr", source: .claude, context: ctx("w7", "p1", label: "clause")),
+        ]
+        try JSONEncoder().encode(notes).write(to: url)
+        let store = NoteStore(snapshotURL: url)
+        let ids = Dictionary(uniqueKeysWithValues: store.notes.map { ($0.text, $0.workspaceId) })
+        #expect(ids["audit"] == "local:platform-tracking-audit")
+        #expect(ids["clause"] == "local:clause")
+        #expect(ids["herdr"] == "w7")
+        #expect(store.listNotes(caller: ctx("local:clause", "pid-2")).map(\.text) == ["clause"])
     }
 }

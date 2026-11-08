@@ -20,8 +20,11 @@ struct HerdrContextTests {
     @Test("Outside herdr falls back to a local workspace per directory")
     func contextOutsideHerdr() {
         let ctx = HerdrContext.baseContext(env: [:], cwd: "/Users/x/proj", pid: 42)
-        #expect(ctx.workspaceId == "local:proj")
-        #expect(HerdrContext.baseContext(env: [:], cwd: "/Users/x/other", pid: 42).workspaceId == "local:other")
+        #expect(ctx.workspaceId == "local:/Users/x/proj")
+        let clientA = HerdrContext.baseContext(env: [:], cwd: "/work/client-a/api", pid: 1)
+        let clientB = HerdrContext.baseContext(env: [:], cwd: "/work/client-b/api", pid: 2)
+        #expect(clientA.workspaceId != clientB.workspaceId)
+        #expect(clientA.workspaceLabel == "api" && clientB.workspaceLabel == "api")
         #expect(ctx.paneId == "pid-42")
         #expect(ctx.workspaceLabel == "proj")
     }

@@ -24,6 +24,7 @@ struct NoteRowViewTests {
             NoteStore.WorkspaceGroup(id: id, label: label, panes: [])
         }
         #expect(ContentView.workspaceSubtitle(group("local:clause", "clause")) == nil)
+        #expect(ContentView.workspaceSubtitle(group("local:/work/client-a/api", "api")) == "/work/client-a/api")
         #expect(ContentView.workspaceSubtitle(group("w7", "w7")) == nil)
         #expect(ContentView.workspaceSubtitle(group("w7", nil)) == nil)
         #expect(ContentView.workspaceSubtitle(group("w7", "audit")) == "w7")

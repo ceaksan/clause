@@ -4,13 +4,22 @@ import ClauseShared
 @main
 struct ClauseApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
-    @State private var noteStore = NoteStore()
+    /// Under xcodebuild test this app hosts the tests; it must not touch the user's socket or board.
+    static let isTestHost = ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil
+
+    @State private var noteStore = NoteStore(snapshotURL: ClauseApp.isTestHost ? nil : ClauseConstants.boardFile)
     @State private var socketServer: SocketServer?
+
+    init() {
+        // A CLI that quits mid-response must not kill the app; writes return EPIPE instead.
+        signal(SIGPIPE, SIG_IGN)
+    }
 
     var body: some Scene {
         Window("Clause", id: "main") {
             ContentView()
                 .environment(noteStore)
+                .environment(socketServer)
                 .onAppear {
                     setupSocketServer()
                     configureWindow()
@@ -21,6 +30,7 @@ struct ClauseApp: App {
     }
 
     private func setupSocketServer() {
+        guard !Self.isTestHost else { return }
         let server = SocketServer(noteStore: noteStore)
         server.start()
         socketServer = server

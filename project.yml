@@ -36,6 +36,11 @@ targets:
       - ClauseApp
     dependencies:
       - target: ClauseShared
+      - target: ClauseMCP
+        embed: true
+        codeSign: true
+        copy:
+          destination: executables
     settings:
       base:
         PRODUCT_NAME: Clause

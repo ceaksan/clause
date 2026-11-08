@@ -6,27 +6,31 @@ import Darwin
 #endif
 
 @MainActor
+@Observable
 final class SocketServer {
+    /// Set when the socket could not be opened; agents cannot reach the board until restart.
+    private(set) var startError: String?
+    private let socketPath: String
     private var serverFd: Int32 = -1
     private var acceptSource: DispatchSourceRead?
     private var clientSources: [Int32: DispatchSourceRead] = [:]
     private var clientBuffers: [Int32: Data] = [:]
     private let noteStore: NoteStore
 
-    init(noteStore: NoteStore) {
+    init(noteStore: NoteStore, socketPath: String = ClauseConstants.socketPath) {
         self.noteStore = noteStore
+        self.socketPath = socketPath
     }
 
     func start() {
         setupDirectory()
         removeStaleSocket()
-
-        let socketPath = ClauseConstants.socketPath
+        startError = nil
 
         // Create socket
         serverFd = socket(AF_UNIX, SOCK_STREAM, 0)
         guard serverFd >= 0 else {
-            print("Failed to create socket: \(errno)")
+            fail("Failed to create socket (errno \(errno))")
             return
         }
 
@@ -35,9 +39,7 @@ final class SocketServer {
         addr.sun_family = sa_family_t(AF_UNIX)
         let pathBytes = socketPath.utf8CString
         guard pathBytes.count <= MemoryLayout.size(ofValue: addr.sun_path) else {
-            print("Socket path too long")
-            Darwin.close(serverFd)
-            serverFd = -1
+            fail("Socket path too long")
             return
         }
         withUnsafeMutablePointer(to: &addr.sun_path) { ptr in
@@ -54,17 +56,13 @@ final class SocketServer {
             }
         }
         guard bindResult == 0 else {
-            print("Failed to bind socket: \(errno)")
-            Darwin.close(serverFd)
-            serverFd = -1
+            fail("Failed to bind \(socketPath) (errno \(errno))")
             return
         }
 
         // Listen
         guard listen(serverFd, 5) == 0 else {
-            print("Failed to listen: \(errno)")
-            Darwin.close(serverFd)
-            serverFd = -1
+            fail("Failed to listen (errno \(errno))")
             return
         }
 
@@ -111,16 +109,23 @@ final class SocketServer {
 
     // MARK: - Private
 
+    private func fail(_ message: String) {
+        print(message)
+        startError = message
+        if serverFd >= 0 { Darwin.close(serverFd) }
+        serverFd = -1
+    }
+
     private func setupDirectory() {
         try? FileManager.default.createDirectory(
-            at: ClauseConstants.baseDirectory,
+            at: URL(fileURLWithPath: socketPath).deletingLastPathComponent(),
             withIntermediateDirectories: true,
             attributes: [.posixPermissions: 0o700]
         )
     }
 
     private func removeStaleSocket() {
-        let path = ClauseConstants.socketPath
+        let path = socketPath
         if FileManager.default.fileExists(atPath: path) {
             try? FileManager.default.removeItem(atPath: path)
         }
@@ -139,7 +144,7 @@ final class SocketServer {
 
         guard clientFd >= 0 else { return }
 
-        // Set non-blocking
+        SocketIO.disableSigPipe(clientFd)
         let flags = fcntl(clientFd, F_GETFL)
         _ = fcntl(clientFd, F_SETFL, flags | O_NONBLOCK)
 
@@ -348,11 +353,11 @@ final class SocketServer {
     }
 
     private func sendResponse(_ response: IPCResponse, to fd: Int32) {
-        guard let data = try? JSONEncoder().encode(response) else { return }
-        var message = data
+        guard var message = try? JSONEncoder().encode(response) else { return }
         message.append(UInt8(ascii: "\n"))
-        message.withUnsafeBytes { ptr in
-            _ = write(fd, ptr.baseAddress!, ptr.count)
+        if !SocketIO.writeAll(fd, message) {
+            print("Write to CLI failed: fd=\(fd)")
+            disconnectClient(fd: fd)
         }
     }
 }

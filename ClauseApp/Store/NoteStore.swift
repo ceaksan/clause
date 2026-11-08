@@ -18,6 +18,8 @@ final class NoteStore {
     }
 
     private(set) var notes: [Note] = []
+    /// Last board save failure, shown in the window; nil after a successful save.
+    private(set) var saveError: String?
     private var nextSeq = 1
     private let snapshotURL: URL?
     private var saveTask: Task<Void, Never>?
@@ -43,7 +45,9 @@ final class NoteStore {
         note.seq = nextSeq
         nextSeq += 1
         notes.insert(note, at: 0)
-        didWrite()
+        pruneDecided()
+        saveTask?.cancel()
+        flushSync()
         return note
     }
 
@@ -230,8 +234,10 @@ final class NoteStore {
             let encoder = JSONEncoder()
             encoder.outputFormatting = .prettyPrinted
             try encoder.encode(BoardSnapshot(nextSeq: nextSeq, notes: notes)).write(to: snapshotURL, options: .atomic)
+            saveError = nil
         } catch {
             print("NoteStore save error: \(error)")
+            saveError = "Board not saved: \(error.localizedDescription)"
         }
     }
 
@@ -254,6 +260,9 @@ final class NoteStore {
             for index in notes.indices.sorted(by: { notes[$0].timestamp < notes[$1].timestamp }) where notes[index].seq == nil {
                 notes[index].seq = nextSeq
                 nextSeq += 1
+            }
+            for index in notes.indices where notes[index].workspaceId == "local" {
+                notes[index].workspaceId = "local:\(notes[index].workspaceLabel ?? "unknown")"
             }
             for index in notes.indices { notes[index].normalize() }
             pruneDecided()

@@ -3,6 +3,7 @@ import ClauseShared
 
 struct ContentView: View {
     @Environment(NoteStore.self) private var noteStore
+    @Environment(SocketServer.self) private var socketServer: SocketServer?
     @State private var inputText = ""
     @State private var selectedType: Note.NoteType = .note
     @State private var isFloating = true
@@ -11,6 +12,23 @@ struct ContentView: View {
     var body: some View {
         VStack(spacing: 0) {
             titleBar
+
+            if let problem = noteStore.saveError ?? socketServer?.startError {
+                HStack(alignment: .top, spacing: 6) {
+                    Image(systemName: "exclamationmark.triangle.fill")
+                        .foregroundStyle(NoteRowView.warningColor)
+                    Text(problem)
+                        .font(.system(size: 11))
+                        .foregroundStyle(Color(white: 0.9))
+                        .fixedSize(horizontal: false, vertical: true)
+                        .textSelection(.enabled)
+                    Spacer(minLength: 0)
+                }
+                .padding(.horizontal, 14)
+                .padding(.vertical, 8)
+                .background(NoteRowView.warningColor.opacity(0.18))
+                .accessibilityElement(children: .combine)
+            }
 
             Divider().background(Color(white: 0.17))
 
@@ -107,6 +125,9 @@ struct ContentView: View {
                 Text(subtitle)
                     .font(.system(size: 10, design: .monospaced))
                     .foregroundStyle(Color(white: 0.4))
+                    .lineLimit(1)
+                    .truncationMode(.head)
+                    .help(subtitle)
             }
             Spacer()
             if open > 0 { openPill(open) }
@@ -199,6 +220,9 @@ struct ContentView: View {
     }
 
     static func workspaceSubtitle(_ workspace: NoteStore.WorkspaceGroup) -> String? {
+        if workspace.id.hasPrefix("local:/") {
+            return (String(workspace.id.dropFirst("local:".count)) as NSString).abbreviatingWithTildeInPath
+        }
         guard let label = workspace.label, !workspace.id.hasPrefix("local") else { return nil }
         return workspace.id == label ? nil : workspace.id
     }
