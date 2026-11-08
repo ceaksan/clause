@@ -263,7 +263,7 @@ log("Starting clause-mcp")
 
 let server = Server(
     name: "clause",
-    version: "0.2.0",
+    version: "0.2.1",
     capabilities: .init(tools: .init())
 )
 
