@@ -54,7 +54,7 @@ Every note has a ref (`N-3`, `T-4`, `W-8`, `D-12`) that is never reused; click i
 
 ## Quick Start
 
-Download `Clause-<version>-macos.zip` from [Releases](https://github.com/ceaksan/clause/releases/latest), unzip it and move `Clause.app` to `/Applications`. It is a universal build (Apple Silicon and Intel) with `clause-mcp` inside. The app is not notarized: on first launch, right-click it and choose Open, or run `xattr -dr com.apple.quarantine /Applications/Clause.app`.
+Download `Clause-<version>-macos.zip` from [Releases](https://github.com/ceaksan/clause/releases/latest), unzip it and move `Clause.app` to `/Applications`. It is a universal build (Apple Silicon and Intel) with `clause-mcp` inside. The app is not notarized, so macOS blocks the first launch: open it once, then choose Open Anyway in System Settings > Privacy & Security, or run `xattr -dr com.apple.quarantine /Applications/Clause.app`.
 
 Or build from source:
 
