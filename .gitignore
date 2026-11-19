@@ -18,3 +18,7 @@ Packages/
 
 # Superpowers
 .superpowers/
+
+# Local tooling
+.knowledge.toml
+output/
