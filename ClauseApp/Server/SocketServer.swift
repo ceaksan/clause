@@ -279,11 +279,11 @@ final class SocketServer {
         return value
     }
 
-    private func idParam(_ request: IPCRequest) throws -> UUID? {
+    private func idParam(_ request: IPCRequest) throws -> (id: UUID?, byRef: Bool) {
         guard let raw = try stringParam(request, "id") else { throw ParamError(message: "Missing id") }
-        if let id = UUID(uuidString: raw) { return id }
+        if let id = UUID(uuidString: raw) { return (id, false) }
         guard Note.seq(fromRef: raw) != nil else { throw ParamError(message: "Invalid id: \(raw)") }
-        return noteStore.noteId(forRef: raw)
+        return (noteStore.noteId(forRef: raw), true)
     }
 
     private func requireDecisionForStatus(_ status: DecisionStatus?, type: Note.NoteType) throws {
@@ -310,7 +310,13 @@ final class SocketServer {
 
     private func handleListNotes(_ request: IPCRequest, caller: AgentContext) throws -> IPCResponse {
         let typeFilter: Note.NoteType? = try enumParam(request, "type")
-        let notes = noteStore.listNotes(caller: caller, type: typeFilter)
+        let notes: [Note]
+        if let ref = try stringParam(request, "ref") {
+            guard Note.seq(fromRef: ref) != nil else { throw ParamError(message: "Invalid ref: \(ref)") }
+            notes = noteStore.note(ref: ref, caller: caller).map { [$0] } ?? []
+        } else {
+            notes = noteStore.listNotes(caller: caller, type: typeFilter)
+        }
 
         let formatter = ISO8601DateFormatter()
         let noteDicts: [[String: IPCValue]] = notes.map { note in
@@ -332,12 +338,13 @@ final class SocketServer {
     }
 
     private func handleEditNote(_ request: IPCRequest, caller: AgentContext) throws -> IPCResponse {
-        guard let id = try idParam(request) else { return fail(.notFound, "Note not found", request) }
+        let (lookup, byRef) = try idParam(request)
+        guard let id = lookup else { return fail(.notFound, "Note not found", request) }
         let type: Note.NoteType? = try enumParam(request, "type")
         let status: DecisionStatus? = try enumParam(request, "status")
         let text = try stringParam(request, "text")
         let completed = try boolParam(request, "completed")
-        guard let current = noteStore.listNotes(caller: caller).first(where: { $0.id == id }) else {
+        guard let current = noteStore.editableNote(id: id, caller: caller, byRef: byRef) else {
             return fail(.notFound, "Note not found", request)
         }
         try requireDecisionForStatus(status, type: type ?? current.type)
@@ -348,13 +355,14 @@ final class SocketServer {
             type: type,
             completed: completed,
             status: status,
-            caller: caller
+            caller: caller,
+            byRef: byRef
         )
         return IPCResponse(result: ["ok": .bool(true)], reqId: request.reqId)
     }
 
     private func handleDeleteNote(_ request: IPCRequest, caller: AgentContext) throws -> IPCResponse {
-        guard let id = try idParam(request) else { return fail(.notFound, "Note not found", request) }
+        guard let id = try idParam(request).id else { return fail(.notFound, "Note not found", request) }
         guard noteStore.deleteNote(id: id, caller: caller) else {
             return fail(.notFound, "Note not found", request)
         }

@@ -21,7 +21,9 @@ Clause becomes a one-way observer board for the user.
   `herdr` CLI with a 2 s timeout per call, and attaches the context to every IPC request.
   `set_session` is removed; protocol version becomes 2.
 - The app keeps one flat note list. Every agent request is scoped to the caller's
-  `(workspaceId, paneId)`; the UI is unscoped.
+  `(workspaceId, paneId)`; the UI is unscoped. Amended by ADR-003 (2026-11-19): outside
+  herdr, list and edit use the folder workspace; lookup and edit by ref reach any pane in
+  the workspace; delete and clear stay pane-scoped.
 - A `decision` note type with status `sent` or `decided`. Type and status invariants are
   enforced in the model; status on a non-decision is rejected at the IPC boundary.
 - Each pane keeps its 5 most recent decided decisions; older ones are pruned.

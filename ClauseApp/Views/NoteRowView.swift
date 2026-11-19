@@ -11,6 +11,8 @@ struct NoteRowView: View {
     let note: Note
     var onToggleCompleted: (() -> Void)?
     var onSaveMemo: ((String) -> Void)?
+    var onSetStatus: ((DecisionStatus) -> Void)?
+    var onDelete: (() -> Void)?
 
     @State private var copied = false
     @State private var hovering = false
@@ -30,6 +32,19 @@ struct NoteRowView: View {
         case 1: return "Yesterday \(time)"
         default: return "\(date.formatted(.dateTime.day().month(.abbreviated))) \(time)"
         }
+    }
+
+    struct StatusAction: Equatable {
+        let status: DecisionStatus
+        let icon: String
+        let label: String
+    }
+
+    static func statusAction(for note: Note) -> StatusAction? {
+        guard note.type == .decision else { return nil }
+        return note.status == .decided
+            ? StatusAction(status: .sent, icon: "arrow.uturn.backward.circle", label: "Mark sent")
+            : StatusAction(status: .decided, icon: "checkmark.circle", label: "Mark decided")
     }
 
     private var isOpenDecision: Bool { note.type == .decision && note.status == .sent }
@@ -139,16 +154,26 @@ struct NoteRowView: View {
 
             Spacer(minLength: 0)
 
-            if note.type == .decision && note.memo == nil && !editingMemo {
-                Button(action: startEditingMemo) {
-                    Image(systemName: "square.and.pencil")
-                        .font(.system(size: 10))
+            HStack(spacing: 8) {
+                if note.type == .decision && note.memo == nil && !editingMemo {
+                    Button(action: startEditingMemo) { Image(systemName: "square.and.pencil") }
+                        .help("Add a private note")
                 }
-                .buttonStyle(.plain)
-                .foregroundStyle(Color(white: 0.55))
-                .opacity(hovering ? 1 : 0.35)
-                .help("Add a private note")
+                if let action = Self.statusAction(for: note), let onSetStatus {
+                    Button(action: { onSetStatus(action.status) }) { Image(systemName: action.icon) }
+                        .help(action.label)
+                        .accessibilityLabel(action.label)
+                }
+                if let onDelete {
+                    Button(action: onDelete) { Image(systemName: "trash") }
+                        .help("Delete")
+                        .accessibilityLabel("Delete")
+                }
             }
+            .buttonStyle(.plain)
+            .font(.system(size: 10))
+            .foregroundStyle(Color(white: 0.55))
+            .opacity(hovering ? 1 : 0.35)
         }
         .font(.system(size: 10, design: .monospaced))
         .foregroundStyle(Color(white: 0.4))

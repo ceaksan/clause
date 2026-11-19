@@ -57,16 +57,21 @@ struct SocketServerTests {
         #expect(rows.first?["ref"] as? String == "D-1")
     }
 
-    @Test("edit_note and delete_note accept a ref, scoped to the pane")
+    @Test("edit_note by ref reaches the whole workspace; delete_note by ref stays in the pane")
     func editByRef() {
         let h = Harness()
         _ = h.add("pick db", type: "decision", pane: "p1")
-        _ = h.add("theirs", type: "decision", pane: "p2")
+        let theirsId = h.add("theirs", type: "decision", pane: "p2")
         let edited = h.call("edit_note", ["id": .string("D-1"), "status": .string("decided")], pane: "p1")
         #expect(edited.error == nil)
         #expect(h.store.notes.first { $0.seq == 1 }?.status == .decided)
-        let crossEdit = h.call("edit_note", ["id": .string("D-2"), "text": .string("hijack")], pane: "p1")
-        #expect(crossEdit.error?.code == ErrorCode.notFound.rawValue)
+        let crossEdit = h.call("edit_note", ["id": .string("D-2"), "status": .string("decided")], pane: "p1")
+        #expect(crossEdit.error == nil)
+        #expect(h.store.notes.first { $0.seq == 2 }?.status == .decided)
+        let crossUUID = h.call("edit_note", ["id": .string(theirsId), "text": .string("hijack")], pane: "p1")
+        #expect(crossUUID.error?.code == ErrorCode.notFound.rawValue)
+        let otherWorkspace = h.call("edit_note", ["id": .string("D-2"), "text": .string("hijack")], ws: "w2", pane: "p2")
+        #expect(otherWorkspace.error?.code == ErrorCode.notFound.rawValue)
         let crossDelete = h.call("delete_note", ["id": .string("2")], pane: "p1")
         #expect(crossDelete.error?.code == ErrorCode.notFound.rawValue)
         #expect(h.store.notes.first { $0.seq == 2 }?.text == "theirs")
@@ -243,5 +248,35 @@ struct SocketServerTests {
         let h = Harness()
         let response = h.call("set_session", ["id": .string("s"), "directory": .string("/tmp")], pane: "p1")
         #expect(response.error?.code == ErrorCode.invalidParams.rawValue)
+    }
+
+    @Test("list_notes with a ref finds a note from any pane in the workspace, and only that note")
+    func listByRef() throws {
+        let h = Harness()
+        _ = h.add("mine", pane: "p1")
+        _ = h.add("theirs", type: "decision", pane: "p2")
+        let json = try #require(h.call("list_notes", ["ref": .string("D-2")], pane: "p1").result?["notes"]?.stringValue)
+        let rows = try #require(try JSONSerialization.jsonObject(with: Data(json.utf8)) as? [[String: Any]])
+        #expect(rows.compactMap { $0["text"] as? String } == ["theirs"])
+        let elsewhere = try #require(h.call("list_notes", ["ref": .string("D-2")], ws: "w2", pane: "p2").result?["notes"]?.stringValue)
+        #expect(elsewhere == "[]")
+        #expect(h.call("list_notes", ["ref": .string("nope")], pane: "p1").error?.code == ErrorCode.invalidParams.rawValue)
+        #expect(try h.listedTexts(pane: "p1") == ["mine"])
+    }
+
+    @Test("Outside herdr a restarted agent lists and edits its folder's notes, but cannot delete or clear them")
+    func localWorkspaceScope() throws {
+        let h = Harness()
+        let folder = HerdrContext.baseContext(env: [:], cwd: "/tmp/proj", pid: 100).workspaceId
+        let id = h.add("old session", type: "decision", ws: folder, pane: "pid-100")
+        #expect(try h.listedTexts(ws: folder, pane: "pid-200") == ["old session"])
+        let edited = h.call("edit_note", ["id": .string(id), "status": .string("decided")], ws: folder, pane: "pid-200")
+        #expect(edited.error == nil)
+        #expect(h.store.notes.first?.status == .decided)
+        #expect(try h.listedTexts(ws: "local:/tmp/other", pane: "pid-200").isEmpty)
+        let deleted = h.call("delete_note", ["id": .string(id)], ws: folder, pane: "pid-200")
+        #expect(deleted.error?.code == ErrorCode.notFound.rawValue)
+        #expect(h.call("clear_notes", ws: folder, pane: "pid-200").result?["cleared"] == .int(0))
+        #expect(h.store.notes.count == 1)
     }
 }

@@ -89,7 +89,18 @@ final class NoteStore {
 
     func listNotes(caller: AgentContext?, type: Note.NoteType? = nil) -> [Note] {
         notes.filter { note in
-            (caller.map { note.belongs(to: $0) } ?? true) && (type == nil || note.type == type)
+            (caller.map { note.isReadable(by: $0) } ?? true) && (type == nil || note.type == type)
+        }
+    }
+
+    func note(ref: String, caller: AgentContext) -> Note? {
+        guard let seq = Note.seq(fromRef: ref) else { return nil }
+        return notes.first { $0.seq == seq && $0.sharesWorkspace(with: caller) }
+    }
+
+    func editableNote(id: UUID, caller: AgentContext?, byRef: Bool = false) -> Note? {
+        notes.first { note in
+            note.id == id && (caller.map { byRef ? note.sharesWorkspace(with: $0) : note.isReadable(by: $0) } ?? true)
         }
     }
 
@@ -100,9 +111,11 @@ final class NoteStore {
         type: Note.NoteType? = nil,
         completed: Bool? = nil,
         status: DecisionStatus? = nil,
-        caller: AgentContext? = nil
+        caller: AgentContext? = nil,
+        byRef: Bool = false
     ) -> Bool {
-        guard let index = index(of: id, caller: caller) else { return false }
+        guard editableNote(id: id, caller: caller, byRef: byRef) != nil,
+              let index = notes.firstIndex(where: { $0.id == id }) else { return false }
         if let text { notes[index].text = String(text.prefix(ClauseConstants.maxNoteLength)) }
         if let type { notes[index].type = type }
         if let completed { notes[index].completed = completed }

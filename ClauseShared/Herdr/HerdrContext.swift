@@ -3,6 +3,7 @@ import Foundation
 public enum HerdrContext {
     public static let workspaceEnvKey = "HERDR_WORKSPACE_ID"
     public static let paneEnvKey = "HERDR_PANE_ID"
+    public static let localWorkspacePrefix = "local:"
 
     public static func isHerdr(env: [String: String]) -> Bool {
         !(env[workspaceEnvKey] ?? "").isEmpty && !(env[paneEnvKey] ?? "").isEmpty
@@ -15,7 +16,7 @@ public enum HerdrContext {
         let url = URL(fileURLWithPath: cwd).standardizedFileURL
         let directory = url.lastPathComponent
         return AgentContext(
-            workspaceId: "local:\(url.path)",
+            workspaceId: "\(localWorkspacePrefix)\(url.path)",
             paneId: "pid-\(pid)",
             workspaceLabel: directory,
             pid: pid

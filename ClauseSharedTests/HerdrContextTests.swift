@@ -29,6 +29,20 @@ struct HerdrContextTests {
         #expect(ctx.workspaceLabel == "proj")
     }
 
+    @Test("Only the outside-herdr context reads its whole workspace")
+    func localReadScope() {
+        let local = HerdrContext.baseContext(env: [:], cwd: "/Users/x/proj", pid: 42)
+        let herdr = HerdrContext.baseContext(env: herdrEnv, cwd: "/Users/x/proj", pid: 42)
+        #expect(local.isLocal)
+        #expect(!herdr.isLocal)
+        let fromOtherPane = Note(text: "t", source: .claude, context: AgentContext(workspaceId: "w7", paneId: "p9", pid: 1))
+        #expect(!fromOtherPane.isReadable(by: herdr))
+        #expect(fromOtherPane.sharesWorkspace(with: herdr))
+        let fromOldSession = Note(text: "t", source: .claude, context: AgentContext(workspaceId: local.workspaceId, paneId: "pid-7", pid: 7))
+        #expect(fromOldSession.isReadable(by: local))
+        #expect(!fromOldSession.belongs(to: local))
+    }
+
     @Test("Empty env values are not herdr")
     func emptyEnvIsNotHerdr() {
         #expect(!HerdrContext.isHerdr(env: ["HERDR_WORKSPACE_ID": "", "HERDR_PANE_ID": "p3"]))

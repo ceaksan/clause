@@ -1,5 +1,6 @@
 import Testing
 import Foundation
+@testable import ClauseShared
 @testable import Clause
 
 @Suite("NoteRowView")
@@ -29,5 +30,14 @@ struct NoteRowViewTests {
         #expect(ContentView.workspaceSubtitle(group("w7", "w7")) == nil)
         #expect(ContentView.workspaceSubtitle(group("w7", nil)) == nil)
         #expect(ContentView.workspaceSubtitle(group("w7", "audit")) == "w7")
+    }
+
+    @Test("Row status icon marks an open decision decided and a decided one sent; other types get none")
+    func statusAction() {
+        let open = Note(text: "t", source: .claude, type: .decision, status: .sent)
+        let decided = Note(text: "t", source: .claude, type: .decision, status: .decided)
+        #expect(NoteRowView.statusAction(for: open)?.status == .decided)
+        #expect(NoteRowView.statusAction(for: decided)?.status == .sent)
+        #expect(NoteRowView.statusAction(for: Note(text: "t", source: .user, type: .todo)) == nil)
     }
 }

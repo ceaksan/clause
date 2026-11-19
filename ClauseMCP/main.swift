@@ -36,14 +36,15 @@ let tools: [Tool] = [
     ),
     Tool(
         name: "list_notes",
-        description: "List the notes this pane has posted to the Clause board. Each note has a ref such as D-17 and its post time (ts). When the user asks about a ref, look it up here.",
+        description: "List the notes this pane has posted to the Clause board (outside herdr: this folder's notes). Each note has a ref such as D-17 and its post time (ts). When the user asks about a ref, pass it as ref: that finds the note from any pane in this workspace.",
         inputSchema: schema([
-            "type": .object(["type": .string("string"), "enum": noteTypes, "description": .string("Filter by note type")])
+            "type": .object(["type": .string("string"), "enum": noteTypes, "description": .string("Filter by note type")]),
+            "ref": .object(["type": .string("string"), "description": .string("Look up one note by ref such as D-17, from any pane in this workspace")])
         ])
     ),
     Tool(
         name: "edit_note",
-        description: "Edit one of your own Clause notes. Set status to \"decided\" when the answer to your decision topic comes back. Status is only valid on decisions.",
+        description: "Edit a Clause note: by UUID, one of this pane's notes (outside herdr: this folder's notes); by ref such as D-17, any note in this workspace. Set status to \"decided\" when the answer to a decision topic comes back. Status is only valid on decisions.",
         inputSchema: schema([
             "id": .object(["type": .string("string"), "description": .string("Note UUID or ref such as D-17")]),
             "text": .object(["type": .string("string"), "description": .string("New text content")]),

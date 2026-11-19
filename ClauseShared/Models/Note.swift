@@ -97,7 +97,19 @@ public struct Note: Identifiable, Codable, Equatable, Sendable {
         }
     }
 
+    /// Pane ownership: delete and clear.
     public func belongs(to context: AgentContext) -> Bool {
         workspaceId == context.workspaceId && paneId == context.paneId
+    }
+
+    /// List and edit. Outside herdr the pane is a process id that changes on every restart,
+    /// so the folder's workspace is the stable scope (ADR-003).
+    public func isReadable(by context: AgentContext) -> Bool {
+        belongs(to: context) || (context.isLocal && workspaceId == context.workspaceId)
+    }
+
+    /// Lookup and edit by ref: a ref is something the user hands over, from any pane.
+    public func sharesWorkspace(with context: AgentContext) -> Bool {
+        workspaceId == context.workspaceId
     }
 }

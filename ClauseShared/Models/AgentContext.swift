@@ -7,6 +7,8 @@ public struct AgentContext: Codable, Sendable, Equatable {
     public var agentLabel: String?
     public let pid: Int32
 
+    public var isLocal: Bool { workspaceId.hasPrefix(HerdrContext.localWorkspacePrefix) }
+
     public init(workspaceId: String, paneId: String, workspaceLabel: String? = nil, agentLabel: String? = nil, pid: Int32) {
         self.workspaceId = workspaceId
         self.paneId = paneId

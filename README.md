@@ -31,8 +31,8 @@ Inside herdr, `clause-mcp` reads `HERDR_WORKSPACE_ID` and `HERDR_PANE_ID` and ta
 | Tool          | Description                                                              |
 | ------------- | ------------------------------------------------------------------------ |
 | `add_note`    | Add a note, todo, warning, or decision (`status`: `sent` or `decided`)   |
-| `list_notes`  | List this pane's notes, each with a short ref such as `D-12`             |
-| `edit_note`   | Update one of this pane's notes by UUID or ref, e.g. mark `D-12` decided |
+| `list_notes`  | List this pane's notes, each with a short ref such as `D-12`; pass `ref` to look one up from any pane in the workspace |
+| `edit_note`   | Update a note: by UUID one of this pane's, by ref any in the workspace, e.g. mark `D-12` decided |
 | `delete_note` | Remove one of this pane's notes by UUID or ref                           |
 | `clear_notes` | Clear this pane's notes                                                  |
 
@@ -43,7 +43,7 @@ Every note has a ref (`N-3`, `T-4`, `W-8`, `D-12`) that is never reused; click i
 ### Good to know
 
 - The board is a scratch space, not an archive. A memo goes away with its decision, including when the decision drops off after 5 newer decided ones. Keep anything durable in your own tracker.
-- Outside herdr, each agent session is its own pane (`pid-<pid>`) in a workspace named after its working directory. When the session restarts, its old notes stay on the board but the new session cannot edit them; clear them from the panel.
+- Outside herdr, each agent session is its own pane (`pid-<pid>`) in a workspace named after its working directory. When the session restarts, the new session still lists and edits the folder's notes, but only the panel can delete or clear the old session's notes (ADR-003).
 - If the board cannot be saved or the socket cannot be opened, the window shows a red bar with the reason. While the board cannot be saved, agents get an error from `add_note` instead of a ref.
 
 ## Requirements

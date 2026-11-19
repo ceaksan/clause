@@ -8,6 +8,7 @@ struct ContentView: View {
     @State private var selectedType: Note.NoteType = .note
     @State private var isFloating = true
     @State private var pendingClear: NoteStore.WorkspaceGroup?
+    @State private var pendingDelete: Note?
 
     var body: some View {
         VStack(spacing: 0) {
@@ -57,6 +58,18 @@ struct ContentView: View {
             Button("Cancel", role: .cancel) {}
         } message: { _ in
             Text("Notes and private memos in this workspace are deleted. This cannot be undone.")
+        }
+        .confirmationDialog(
+            "Delete \(pendingDelete?.ref ?? "note")?",
+            isPresented: Binding(get: { pendingDelete != nil }, set: { if !$0 { pendingDelete = nil } }),
+            presenting: pendingDelete
+        ) { note in
+            Button("Delete", role: .destructive) {
+                _ = noteStore.deleteNote(id: note.id)
+            }
+            Button("Cancel", role: .cancel) {}
+        } message: { note in
+            Text("\"\(note.text.prefix(80))\" and its private memo are deleted. This cannot be undone.")
         }
     }
 
@@ -197,24 +210,25 @@ struct ContentView: View {
         NoteRowView(
             note: note,
             onToggleCompleted: { _ = noteStore.editNote(id: note.id, completed: !note.completed) },
-            onSaveMemo: { noteStore.setMemo(id: note.id, $0) }
+            onSaveMemo: { noteStore.setMemo(id: note.id, $0) },
+            onSetStatus: { _ = noteStore.editNote(id: note.id, status: $0) },
+            onDelete: { pendingDelete = note }
         )
         .contextMenu {
             if let ref = note.ref {
                 Button("Copy ID \(ref)") { NoteRowView.copyToPasteboard(ref) }
             }
-            if note.type == .decision {
-                let next: DecisionStatus = note.status == .decided ? .sent : .decided
-                Button(next == .decided ? "Mark decided" : "Mark sent") {
-                    _ = noteStore.editNote(id: note.id, status: next)
+            if let action = NoteRowView.statusAction(for: note) {
+                Button(action.label) {
+                    _ = noteStore.editNote(id: note.id, status: action.status)
                 }
                 if note.memo != nil {
                     Button("Delete private note") { noteStore.setMemo(id: note.id, "") }
                 }
             }
             Divider()
-            Button("Delete", role: .destructive) {
-                _ = noteStore.deleteNote(id: note.id)
+            Button("Delete…", role: .destructive) {
+                pendingDelete = note
             }
         }
     }
