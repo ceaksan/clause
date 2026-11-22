@@ -22,3 +22,6 @@ Packages/
 # Local tooling
 .knowledge.toml
 output/
+
+# Design template tooling
+design/node_modules/

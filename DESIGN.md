@@ -2,10 +2,10 @@
 name: Clause # project.yml targets.Clause.settings.base.PRODUCT_NAME (Info.plist is generated, CFBundleName = PRODUCT_NAME)
 company: ceaksan # decided by Ceair 2026-11-21
 brand: Clause # decided by Ceair 2026-11-21
-design_version: 1.0.0
+design_version: 1.1.0
 product_version: 0.3.0 # project.yml settings.base.MARKETING_VERSION
-source_commit: 54f3a11
-updated: 2026-11-21
+source_commit: 4d729bd
+updated: 2026-11-22
 template: design/template.fig
 status: implemented
 schemes: [dark] # colors are hardcoded dark values; no light variant, no colorScheme handling
@@ -250,7 +250,21 @@ open Clause.xcodeproj
 xcodebuild -scheme Clause -configuration Debug build
 ```
 
-- `design/template.fig` will contain: the token collection (dark mode only), the components above, every state in the Screen inventory at 320 x 480 pt and at the 280 x 300 pt minimum, and a behavior page with the dialogs and context menu.
+- Target for later levels (unchanged): `design/template.fig` will contain: the token collection (dark mode only), the components above, every state in the Screen inventory at 320 x 480 pt and at the 280 x 300 pt minimum, and a behavior page with the dialogs and context menu.
+
+- Design template (Level 1 since design 1.1.0). Tools live in `design/`: `package.json` pins `@open-pencil/cli`, `@open-pencil/core` and `@open-pencil/scene-graph` at exactly 0.16.0 (`bun.lock` committed, `design/node_modules/` in `.gitignore`); `requirements.txt` pins `fonttools` for `font-outlines.py`. `tokens.mjs` reads this frontmatter and takes every token from the view line it cites (`path:line` plus the literal or pattern on that line); `components.mjs` draws the components from those tokens; `font-outlines.py` extracts SF Pro Text and SF Mono glyph outlines from `/System/Library/Fonts` (macOS only), because OpenPencil cannot load the system font by name.
+- Commands, run from the repository root with Node 22 (tested with v22.23.0) and Python 3 with fontTools; none of them builds the app:
+  - `cd design && bun install` installs the pinned OpenPencil packages. If `python3` lacks fontTools: `python3 -m venv design/.venv && design/.venv/bin/python -m pip install -r design/requirements.txt`, then prefix the generator with `PYTHON=design/.venv/bin/python`.
+  - `node design/generate-template.mjs` regenerates the whole of `design/template.fig` (Cover, Tokens, Components) and overwrites it; pass a path to write elsewhere, for example `node design/generate-template.mjs "$TMPDIR/template.fig"`.
+  - `node design/verify-template.mjs` reopens `design/template.fig` from disk and exits non-zero on any mismatch; pass a path to check another file. It checks page order, Cover values against this frontmatter, one collection with one `Dark` mode, every variable name, type and value against the source line it cites, every frontmatter color `value` and `hex` against the literal, every swatch binding, every solid fill and stroke of every main component bound to a variable with the same color, every node opacity in a main component equal to 1 or an `Opacity /` token, glyph outlines on every component text, and the version label on every page after Cover. Run it after any change to this frontmatter or to the cited view files; a token whose line moved fails until `design/tokens.mjs` points at the new line.
+- `design/template.fig` contents (Level 1): Cover (frontmatter values, page index with links, source files); Tokens (collection `Clause`, mode `Dark`, 133 variables: 32 colors with swatch, literal and `path:line`, then Opacity, Type, Radius, Spacing, Size and Motion groups); Components (24 main components: title bar pinned and unpinned, open pill, error bar, workspace header with and without actions, pane header, six markers, note row as note, hovered note, done todo, decision sent and decision decided, memo, memo editor, input field, selected and unselected type button, empty state). Pages after Cover carry the label `Clause · design <version> · product <version> · <page>` bound to `title-bar-bg` and `text-body`. A `.opacity(x)` from the views sits on the node (a separate tint layer where the color only is faded), because a bound paint takes its alpha from the variable.
+
+## Versioning
+
+`design_version` covers this file and `design/template.fig` together.
+
+- 1.0.0 (2026-11-21, `54f3a11`): DESIGN.md and Level 0 template (Cover only).
+- 1.1.0 (2026-11-22, `4d729bd`): Level 1 template (Tokens and Components pages) with generator and verifier in `design/`. Minor bump: new tokens and components in the template; no rule or value in this file changed.
 
 ## Known gaps
 
@@ -263,3 +277,10 @@ xcodebuild -scheme Clause -configuration Debug build
 - **Hex values** in the frontmatter are 8-bit roundings of float components; the float literals are authoritative.
 - **Landing page** (`docs/index.html`) is not described; it has its own token set.
 - **Accessibility**: only the marker and status action carry accessibility labels; VoiceOver behavior was not checked.
+- **Template Level 1** (added 2026-11-22):
+  - SF Symbols are not available to OpenPencil; every icon is a color-bound placeholder square named `SF Symbol <name>` at the symbol's point size. Accepted for Level 1 by Ceair 2026-11-22; real symbol SVGs (exported from the SF Symbols app) come with Level 2. The error bar icon has no `.font` in code (ContentView.swift:19); the template assumes the 13 pt body size.
+  - System controls are not drawn: TextField placeholder and text, TextEditor text, the Cancel and Save buttons, `Divider`, confirmation dialogs and the context menu. The input field and memo editor show only their custom background and stroke.
+  - Text uses outlines from the installed SF Pro (`SFNS.ttf`, optical size axis fixed at 17, its minimum) and SF Mono (`SFNSMono.ttf`); outlines differ between macOS versions, so a regeneration on another macOS can change glyphs and widths. Line heights are approximated as 1.2 x size; SwiftUI layout is reproduced from the stack spacing and padding, not measured from a running app.
+  - The done-todo strikethrough uses the text color (0.5) in the template; the code draws it in `text-meta` (0.4, NoteRowView.swift:73).
+  - Not drawn yet: ref-copied state (checkmark in `ref-copied`), memo editor at its 90 pt maximum, long-text truncation, hover state of memo actions. Sample copy (refs, times, labels, workspace and pane names) is placeholder.
+  - Level 2 (screens) needs captures of the real window, which needs a Debug build of the app; not attempted, waiting for approval.

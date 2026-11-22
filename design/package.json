@@ -1,0 +1,10 @@
+{
+  "name": "clause-design-tools",
+  "private": true,
+  "type": "module",
+  "devDependencies": {
+    "@open-pencil/cli": "0.16.0",
+    "@open-pencil/core": "0.16.0",
+    "@open-pencil/scene-graph": "0.16.0"
+  }
+}
